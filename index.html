@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950">
+<html lang="en" class="h-full">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GrainGuardian Enterprise - Integrated Post-Harvest Control Center</title>
+  <title>GrainGuardian - Intelligent Post-Harvest Storage & Security Platform</title>
   
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -13,545 +12,615 @@
         extend: {
           colors: {
             brand: {
-              emerald: '#10b981',
-              amber: '#f59e0b',
-              rose: '#ef4444',
-              blue: '#3b82f6',
-              dark: '#030712'
+              cream: '#f7f7f3',
+              dark: '#111827',
+              primary: '#00E887',
+              success: '#10b981',
+              warning: '#f59e0b',
+              danger: '#ef4444',
+              muted: '#6b7280'
             }
+          },
+          borderRadius: {
+            '3xl': '24px',
+            '4xl': '32px',
           }
         }
       }
     }
   </script>
 
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at top right, rgba(0,232,135,0.06), transparent 45%), #f7f7f3;
+      color: #111827;
+      overflow-x: hidden;
     }
     .mono {
       font-family: 'JetBrains Mono', monospace;
     }
-    /* Thin elegant custom scrollbars */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+    .glass-card {
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    ::-webkit-scrollbar-track {
-      background: #030712;
+    .glass-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.08);
     }
-    ::-webkit-scrollbar-thumb {
-      background: #1f2937;
-      border-radius: 4px;
+    .glass-nav {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(247, 247, 243, 0.75);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.4);
     }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #374151;
+    .floating-card-1 { animation: float-slow 6s ease-in-out infinite; }
+    .floating-card-2 { animation: float-slow 6s ease-in-out infinite 2s; }
+    .floating-card-3 { animation: float-slow 6s ease-in-out infinite 4s; }
+    @keyframes float-slow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(0.5deg); }
     }
-    /* Glow highlights for premium look */
-    .glow-emerald {
-      box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.15);
-    }
-    .glow-amber {
-      box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.15);
-    }
-    .glow-rose {
-      box-shadow: 0 0 25px -5px rgba(239, 68, 68, 0.15);
-    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
   </style>
 </head>
-<body class="h-full text-slate-100 flex flex-col overflow-hidden bg-slate-950">
+<body class="min-h-screen flex flex-col antialiased">
 
-  <!-- ============================================================================
-      GLOBAL SYSTEM HEADER
-      ============================================================================ -->
-  <header class="bg-slate-900 border-b border-slate-800 h-16 shrink-0 flex items-center justify-between px-6 z-20">
-    <div class="flex items-center gap-3">
-      <span class="p-2 bg-emerald-950 text-emerald-400 rounded-xl border border-emerald-800/40">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v-6.75a2.25 2.25 0 0 0 2.25-2.25Z" /></svg>
-      </span>
+  <nav class="glass-nav sticky top-0 z-50 h-20 flex items-center justify-between px-8 lg:px-16 transition-all duration-300">
+    <div class="flex items-center gap-3 cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+      <div class="w-10 h-10 bg-brand-dark rounded-xl flex items-center justify-center text-brand-primary shadow-md">
+        <i class="fa-solid dM fa-shield-halved text-lg"></i>
+      </div>
       <div>
-        <h1 class="text-md font-extrabold text-white tracking-wide flex items-center gap-2">
-          GrainGuardian <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] py-0.5 px-2 rounded-full font-bold uppercase tracking-widest font-mono">v2.0 Enterprise</span>
-        </h1>
-        <p class="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">Integrated Post-Harvest Analytics Suite</p>
+        <span class="text-lg font-extrabold tracking-tight text-brand-dark block">GrainGuardian</span>
+        <span class="text-[9px] font-bold text-brand-muted uppercase tracking-widest font-mono">Post-Harvest AI</span>
       </div>
     </div>
+    
+    <div class="hidden lg:flex items-center gap-10 text-sm font-semibold text-brand-dark/80">
+      <a href="#features" class="hover:text-brand-dark transition-colors">Technology</a>
+      <a href="#sandbox" class="hover:text-brand-dark transition-colors">Telemetry Simulation</a>
+      <a href="#platform" class="hover:text-brand-dark transition-colors">Enterprise Center</a>
+      <a href="#research" class="hover:text-brand-dark transition-colors">Socio-Economic Case</a>
+    </div>
 
-    <!-- Active telemetry status node metadata -->
-    <div class="flex items-center gap-6 text-xs">
-      <div class="hidden sm:flex items-center gap-2.5 bg-slate-950 border border-slate-800 px-3.5 py-1.5 rounded-lg">
-        <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-        <span class="text-slate-400">Calibration Profile:</span>
-        <select id="cropSelect" class="bg-transparent text-emerald-400 font-bold focus:outline-none cursor-pointer">
-          <option value="0">Paddy (Rice)</option>
-          <option value="1">Wheat</option>
-          <option value="2">Maize (Corn)</option>
-        </select>
+    <div>
+      <button onclick="document.getElementById('platform').scrollIntoView({behavior: 'smooth'})" class="px-5 py-2.5 bg-brand-dark hover:bg-slate-800 text-white rounded-full text-xs font-bold transition-all shadow-md flex items-center gap-2">
+        <span>Launch Control Center</span>
+        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+      </button>
+    </div>
+  </nav>
+
+  <section class="max-w-7xl mx-auto w-full px-6 lg:px-16 pt-16 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+    <div class="lg:col-span-7 space-y-8 text-left">
+      <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1.5 rounded-full text-xs font-bold text-emerald-800">
+        <span class="w-2 h-2 rounded-full bg-brand-success animate-pulse"></span>
+        <span>Empowering Sustainable Smallholder Infrastructure</span>
       </div>
-
-      <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 px-3.5 py-1.5 rounded-lg">
-        <span class="text-slate-400">Operational Phase:</span>
-        <div class="flex gap-1 ml-1">
-          <button id="btnDryingMode" class="px-2.5 py-0.5 rounded text-[10px] font-bold transition">DRYING</button>
-          <button id="btnStorageMode" class="px-2.5 py-0.5 rounded text-[10px] font-bold transition">STORAGE</button>
-        </div>
-      </div>
-
-      <!-- Quick stats & interactive Sim Toggle -->
-      <div class="flex items-center gap-3">
-        <div id="connectionStatus" class="flex items-center gap-2 bg-blue-950/40 border border-blue-900/60 text-blue-300 px-3.5 py-1.5 rounded-lg">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 animate-pulse"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.656 48.656 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7C4.547 9.547 4.5 10.768 4.5 12s.047 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.092-1.209.138-2.43.138-3.662Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9 9.75V12m0 0v2.25m0-2.25h6" /></svg>
-          <span class="font-bold tracking-wide uppercase text-[10px] hidden md:inline">SYSTEM SIM ONLINE</span>
-        </div>
-        <button id="btnConnect" class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-blue-950 border border-blue-900 hover:bg-blue-900 text-blue-300 transition">
-          DISCONNECT
+      <h1 class="text-5xl lg:text-7xl font-black text-brand-dark tracking-tighter leading-[1.05]">
+        Intelligent <span class="underline decoration-brand-success decoration-wavy decoration-1">Post-Harvest</span> Security.
+      </h1>
+      <p class="text-lg text-brand-muted max-w-xl leading-relaxed">
+        An ecosystem combining multi-depth physical telemetry modeling with automated predictive calculation engines. Turn dynamic humidity, thermodynamic conduction, and moisture data sets into deterministic real-time actions.
+      </p>
+      <div class="flex items-center gap-4 pt-2">
+        <button onclick="document.getElementById('platform').scrollIntoView({behavior: 'smooth'})" class="px-7 py-4 bg-brand-dark hover:bg-slate-800 text-white rounded-2xl font-bold text-sm transition shadow-xl shadow-slate-900/10">
+          Open Control Center
+        </button>
+        <button onclick="document.getElementById('sandbox').scrollIntoView({behavior: 'smooth'})" class="px-7 py-4 border border-slate-300 hover:border-slate-400 bg-white/50 rounded-2xl font-bold text-sm transition">
+          Calibrate Simulator
         </button>
       </div>
     </div>
-  </header>
 
-  <!-- ============================================================================
-      MAIN APPLICATION CORE LAYOUT
-      ============================================================================ -->
-  <div class="flex-1 flex overflow-hidden relative">
-    
-    <!-- SIDEBAR NAVIGATION -->
-    <nav class="w-64 bg-slate-900 border-r border-slate-800 shrink-0 hidden md:flex flex-col justify-between py-6">
-      <div class="space-y-6 px-4">
-        <span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold block px-2">Navigation Deck</span>
-        
-        <div class="space-y-1">
-          <button id="navBtnOverview" onclick="nav.switchTab('overview')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-bold transition text-emerald-400 bg-slate-950 border border-slate-800">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4.5 h-4.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>
-            Dashboard Overview
-          </button>
-          
-          <button id="navBtnAdvisory" onclick="nav.switchTab('advisory')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4.5 h-4.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21L8.188 15.904L3 15L8.188 14.096L9 9L9.813 14.096L15 15L9.813 15.904ZM18.25 5.25L17.5 9L16.75 5.25L13 4.5L16.75 3.75L17.5 0L18.25 3.75L22 4.5L18.25 5.25Z" /></svg>
-            System Advisory Center
-          </button>
+    <div class="lg:col-span-5 relative h-[450px] w-full flex items-center justify-center">
+      <div class="absolute inset-0 bg-gradient-to-tr from-brand-primary/10 to-transparent rounded-full filter blur-3xl opacity-60"></div>
+      
+      <div class="glass-card floating-card-1 absolute top-8 left-4 w-60 p-5 rounded-3xl border border-white/60 shadow-xl">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] uppercase font-bold text-brand-muted">Grain Integrity</span>
+          <span class="w-2 h-2 rounded-full bg-brand-success"></span>
+        </div>
+        <div class="text-3xl font-black text-brand-dark font-mono">94<span class="text-sm font-medium text-brand-muted">%</span></div>
+        <p class="text-[10px] text-brand-success font-semibold mt-1"><i class="fa-solid fa-circle-check mr-1"></i> Target Conformance Match</p>
+      </div>
 
-          <button id="navBtnAudit" onclick="nav.switchTab('audit')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4.5 h-4.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-            Warehouse Audit Logs
-          </button>
+      <div class="glass-card floating-card-2 absolute top-40 right-4 w-64 p-5 rounded-3xl border border-white/60 shadow-xl">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] uppercase font-bold text-brand-muted">Core Temperature</span>
+          <span class="w-2 h-2 rounded-full bg-brand-warning"></span>
+        </div>
+        <div class="text-3xl font-black text-brand-dark font-mono">29.1<span class="text-sm font-medium text-brand-muted">°C</span></div>
+        <p class="text-[10px] text-brand-warning font-semibold mt-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Latent Heat Stagnation</p>
+      </div>
+
+      <div class="glass-card floating-card-3 absolute bottom-8 left-12 w-60 p-5 rounded-3xl border border-white/60 shadow-xl">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] uppercase font-bold text-brand-muted">Predictive EMC</span>
+          <span class="w-2 h-2 rounded-full bg-brand-success"></span>
+        </div>
+        <div class="text-3xl font-black text-brand-dark font-mono">12.8<span class="text-sm font-medium text-brand-muted">%</span></div>
+        <p class="text-[10px] text-brand-success font-semibold mt-1"><i class="fa-solid fa-square-check mr-1"></i> Within Dry Envelopes</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="bg-white/40 border-y border-slate-200/60 py-24">
+    <div class="max-w-7xl mx-auto w-full px-6 lg:px-16 text-center space-y-16">
+      <div class="space-y-4 max-w-2xl mx-auto">
+        <span class="text-[11px] font-bold text-brand-success uppercase tracking-widest font-mono block">Platform Architecture</span>
+        <h2 class="text-4xl font-black tracking-tight text-brand-dark">Adaptive Field Capabilities</h2>
+        <p class="text-sm text-brand-muted leading-relaxed">Integrated structural instrumentation tailored to defend smallholders against early biological mold threats across complete storage lifecycles.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="glass-card p-8 rounded-4xl text-left space-y-4">
+          <div class="w-12 h-12 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-center text-brand-warning text-lg">
+            <i class="fa-solid fa-sun"></i>
+          </div>
+          <h3 class="text-lg font-bold text-brand-dark">Drying Assessment Layer</h3>
+          <p class="text-xs text-brand-muted leading-relaxed">
+            Measures boundary layer differential equilibrium conditions using canopy ambient relative humidity values, preventing under-drying or kernel heat vulnerabilities.
+          </p>
         </div>
 
-        <!-- Dynamic Micro-calibrator details -->
-        <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-3.5 text-left text-xs">
-          <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider block border-b border-slate-800 pb-1.5">Model Parameters</span>
-          <div class="space-y-2">
-            <div>
-              <span class="text-slate-400 block font-medium">Selected Crop:</span>
-              <span id="sidebarCropName" class="font-bold text-white">Paddy (Rice)</span>
+        <div class="glass-card p-8 rounded-4xl text-left space-y-4">
+          <div class="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center text-brand-success text-lg">
+            <i class="fa-solid fa-cubes"></i>
+          </div>
+          <h3 class="text-lg font-bold text-brand-dark">Multi-Depth Core Array</h3>
+          <p class="text-xs text-brand-muted leading-relaxed">
+            Implements a 1.5-meter structural probe tracking explicit core coordinates. Detects microclimatic pockets hidden deep within packed piles.
+          </p>
+        </div>
+
+        <div class="glass-card p-8 rounded-4xl text-left space-y-4">
+          <div class="w-12 h-12 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-center text-brand-blue text-lg">
+            <i class="fa-solid fa-brain"></i>
+          </div>
+          <h3 class="text-lg font-bold text-brand-dark">AI Predictive Math Models</h3>
+          <p class="text-xs text-brand-muted leading-relaxed">
+            Continuously runs the mathematical <strong>Modified Henderson-Thompson Equation</strong> on embedded edge layers to extract precise moisture indices before mold spore propagation can occur.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sandbox" class="max-w-7xl mx-auto w-full px-6 lg:px-16 py-24 text-left">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+      <div class="lg:col-span-5 space-y-6">
+        <span class="text-[11px] font-bold text-brand-success uppercase tracking-widest font-mono block">Hardware Simulator Workspace</span>
+        <h2 class="text-3xl font-black tracking-tight text-brand-dark">Telemetry Calibration & Test Deck</h2>
+        <p class="text-xs text-brand-muted leading-relaxed">
+          Manipulate raw hardware variables to simulate varying environmental conditions, boundary-layer adjustments, and seasonal heat dynamics. See how our localized diagnostic algorithm adapts and updates in real-time.
+        </p>
+
+        <div class="bg-white border border-slate-200 p-5 rounded-3xl space-y-4 shadow-sm">
+          <div>
+            <label class="text-[10px] uppercase font-bold text-brand-muted block mb-1.5">Target Verification Crop</label>
+            <select id="cropSelect" class="w-full bg-brand-cream border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-bold text-brand-dark focus:outline-none focus:border-brand-success cursor-pointer">
+              <option value="0">Paddy (Rice) (Safe Limit: 13.5%)</option>
+              <option value="1">Wheat (Safe Limit: 13.0%)</option>
+              <option value="2">Maize (Corn) (Safe Limit: 13.5%)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[10px] uppercase font-bold text-brand-muted block mb-1.5">Hardware Operational Phase</label>
+            <div class="grid grid-cols-2 gap-2 bg-brand-cream p-1 rounded-xl border border-slate-200/60">
+              <button id="simBtnDrying" class="py-2 text-xs font-bold rounded-lg transition-all">Drying Canopy</button>
+              <button id="simBtnStorage" class="py-2 text-xs font-bold rounded-lg transition-all">Storage Probe</button>
             </div>
-            <div>
-              <span class="text-slate-400 block font-medium">Thermodynamic Limits:</span>
-              <span id="sidebarSafeLimit" class="font-mono text-emerald-400 font-bold">EMC &le; 13.5%</span>
-            </div>
-            <div>
-              <span class="text-slate-400 block font-medium">Model Constants:</span>
-              <span id="sidebarConstants" class="font-mono text-slate-400 text-[10px]">c1: 1.918e-5 | c3: 2.448</span>
-            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <span class="text-[10px] uppercase font-bold text-brand-muted tracking-wider block">Pre-configured Testing Environments</span>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="applyEnvironmentPreset('fungal')" class="p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-left transition-all">
+              <span class="text-xs font-bold text-brand-danger block mb-0.5">Fungal Hotspot</span>
+              <span class="text-[9px] text-brand-muted block leading-tight">Simulates high temperature spikes in deep-pile layers.</span>
+            </button>
+            <button onclick="applyEnvironmentPreset('ideal')" class="p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-left transition-all">
+              <span class="text-xs font-bold text-brand-success block mb-0.5">Ideal Cold Storage</span>
+              <span class="text-[9px] text-brand-muted block leading-tight">Maintains low humidity and uniform temperatures.</span>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Footer Info -->
-      <div class="px-6 text-xs text-slate-500 space-y-1">
-        <p class="font-bold text-slate-400">Vuyyuru FPO Center</p>
-        <p>EPICS Research • 2026</p>
-      </div>
-    </nav>
-
-    <!-- CONTENT DISPLAY FRAME -->
-    <main class="flex-1 overflow-y-auto bg-slate-950 p-6 flex flex-col gap-6 custom-scrollbar">
-
-      <!-- ============================================================================
-          VIEW 1: DASHBOARD OVERVIEW (TAB OVERVIEW)
-          ============================================================================ -->
-      <div id="tabViewOverview" class="space-y-6">
+      <div class="lg:col-span-7 bg-white/80 border border-slate-200 p-8 rounded-4xl shadow-xl flex flex-col justify-between">
+        <h3 class="text-sm font-bold text-brand-dark mb-6 uppercase tracking-wider pb-3 border-b border-slate-100">Live Calibration Sliders</h3>
         
-        <!-- Live Danger Alert Warning Overlay -->
-        <div id="systemAlarmOverlay" class="hidden bg-red-950/30 border border-red-500/30 p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
-          <div class="flex items-start gap-3">
-            <span class="p-2 bg-red-500/10 text-red-500 rounded-xl border border-red-500/20 shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 animate-pulse"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" /></svg>
-            </span>
-            <div class="text-left">
-              <h3 class="text-sm font-bold text-red-200 uppercase tracking-wide">Biological Danger Hotspot Detected!</h3>
-              <p id="systemAlarmText" class="text-xs text-slate-300 mt-0.5 leading-relaxed">Active heat spike and relative humidity thresholds breached inside inner pile stack.</p>
+        <div id="simStorageSliders" class="space-y-6">
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span class="text-brand-dark">T1 Sensor (Top Layer - 0.2m)</span>
+              <span id="txtT1" class="text-brand-success font-mono font-bold">28.5°C</span>
             </div>
+            <input type="range" id="inputT1" min="15" max="55" step="0.5" value="28.5" class="w-full h-2 accent-brand-success bg-slate-100 rounded-lg cursor-pointer">
           </div>
-          <button onclick="nav.switchTab('advisory')" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-red-900/40 shrink-0">
-            LOAD ADVISORY Mitigations
-          </button>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span class="text-brand-dark">T2 Sensor (Middle Layer - 0.7m)</span>
+              <span id="txtT2" class="text-brand-success font-mono font-bold">29.1°C</span>
+            </div>
+            <input type="range" id="inputT2" min="15" max="55" step="0.5" value="29.1" class="w-full h-2 accent-brand-success bg-slate-100 rounded-lg cursor-pointer">
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span class="text-brand-dark">T3 Sensor (Bottom Layer - 1.3m)</span>
+              <span id="txtT3" class="text-brand-success font-mono font-bold">29.8°C</span>
+            </div>
+            <input type="range" id="inputT3" min="15" max="55" step="0.5" value="29.8" class="w-full h-2 accent-brand-success bg-slate-100 rounded-lg cursor-pointer">
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span class="text-brand-dark">Probe Inter-Granular Relative Humidity</span>
+              <span id="txtRH" class="text-brand-success font-mono font-bold">58%</span>
+            </div>
+            <input type="range" id="inputRH" min="20" max="95" step="1" value="58" class="w-full h-2 accent-brand-success bg-slate-100 rounded-lg cursor-pointer">
+          </div>
         </div>
 
-        <!-- 3-Column Telemetry KPI Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          <!-- Radial Health score Card -->
-          <div id="healthCardFrame" class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col items-center justify-between text-center relative glow-emerald">
-            <div class="w-full flex justify-between items-center mb-4">
-              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Dynamic Health Engine</span>
-              <span id="healthCardStatusBadge" class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] py-1 px-3 rounded-full font-bold">SAFE STORAGE</span>
+        <div id="simDryingSliders" class="hidden space-y-6">
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span class="text-brand-dark">Canopy Microclimate Temperature</span>
+              <span id="txtAmbientTemp" class="text-brand-success font-mono font-bold">30.0°C</span>
             </div>
-
-            <div class="relative w-44 h-44 flex items-center justify-center my-2">
-              <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="42" stroke="#111827" stroke-width="6" fill="transparent" />
-                <circle id="radialGaugeProgress" cx="50" cy="50" r="42" stroke="#10b981" stroke-width="7" fill="transparent" 
-                  stroke-dasharray="263.8" stroke-dashoffset="20.5" class="transition-all duration-1000 ease-out" />
-              </svg>
-              <div class="absolute inset-0 flex flex-col items-center justify-center">
-                <span id="radialGaugeScore" class="text-5xl font-extrabold text-white tracking-tighter">92</span>
-                <span class="text-[9px] text-slate-400 uppercase font-semibold">Grain Score</span>
-              </div>
-            </div>
-
-            <div class="w-full flex justify-between border-t border-slate-800/80 pt-4 mt-4 text-left text-xs">
-              <div>
-                <span class="text-slate-400 block mb-0.5">Physical Mode:</span>
-                <strong id="healthCardModeText" class="text-white">Active Storage</strong>
-              </div>
-              <div class="text-right">
-                <span class="text-slate-400 block mb-0.5">Calculated EMC Limit:</span>
-                <strong id="healthCardEmcText" class="text-emerald-400 font-mono">12.8%</strong>
-              </div>
-            </div>
+            <input type="range" id="inputAmbientTemp" min="15" max="50" step="0.5" value="30.0" class="w-full h-2 accent-brand-success bg-slate-100 rounded-lg cursor-pointer">
           </div>
 
-          <!-- Deep-pile visualizer section -->
-          <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between shrink-0">
-            <div class="flex justify-between items-center mb-4">
-              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Silo Space Heatmap</span>
-              <span class="bg-slate-950 border border-slate-800 text-slate-400 text-[9px] py-1 px-2.5 rounded-full font-bold font-mono">1.5m Cross-Section</span>
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span class="text-brand-dark">Drying Canopy Relative Humidity</span>
+              <span id="txtAmbientHumidity" class="text-brand-success font-mono font-bold">62%</span>
+            </div>
+            <input type="range" id="inputAmbientHumidity" min="20" max="95" step="1" value="62" class="w-full h-2 accent-brand-success bg-slate-100 rounded-lg cursor-pointer">
+          </div>
+        </div>
+
+        <div class="bg-brand-dark rounded-2xl p-4 mt-8 flex items-center justify-between text-left">
+          <div class="flex items-center gap-2 text-xs">
+            <span class="w-2 h-2 rounded-full bg-brand-primary animate-ping"></span>
+            <span class="text-slate-400">Stream Broadcast:</span>
+            <span id="txtDebugPayload" class="font-mono text-[11px] text-brand-primary font-bold">STORAGE, 28.5, 29.1, 29.8, 12.8%</span>
+          </div>
+          <span class="text-[9px] font-bold text-slate-500 tracking-wider uppercase font-mono">ESP32 TX 2.4GHZ</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="platform" class="max-w-7xl mx-auto w-full px-6 lg:px-16 py-12 scroll-mt-24">
+    <div class="bg-white/80 border border-slate-200 rounded-4xl shadow-2xl p-6 lg:p-8 flex flex-col gap-6">
+      
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
+        <div class="text-left">
+          <h2 id="txtPlatformTitle" class="text-xl font-extrabold text-brand-dark tracking-tight">GrainGuardian Control Platform</h2>
+          <p class="text-xs text-brand-muted">Dynamic evaluation panel for physical field metrics and persisted history databases.</p>
+        </div>
+
+        <div class="flex items-center gap-1 bg-brand-cream p-1 border border-slate-200/60 rounded-xl">
+          <button onclick="dashboardNav.switchTab('overview')" id="tabBtnOverview" class="px-4 py-2 text-xs font-bold rounded-lg transition-all">Overview Monitor</button>
+          <button onclick="dashboardNav.switchTab('advisory')" id="tabBtnAdvisory" class="px-4 py-2 text-xs font-bold rounded-lg transition-all">Risk Advisory</button>
+          <button onclick="dashboardNav.switchTab('logs')" id="tabBtnLogs" class="px-4 py-2 text-xs font-bold rounded-lg transition-all">Audit Database</button>
+        </div>
+      </div>
+
+      <div id="viewOverview" class="space-y-6">
+        
+        <div id="viewOverviewAlarmOverlay" class="hidden bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-start gap-3 text-left">
+          <span class="p-2 bg-red-100 text-brand-danger rounded-xl border border-red-200/60 mt-0.5"><i class="fa-solid fa-triangle-exclamation animate-pulse"></i></span>
+          <div class="space-y-0.5">
+            <h4 class="text-xs font-bold text-brand-danger uppercase tracking-wider">Critical Hazard Anomaly Identified!</h4>
+            <p id="txtOverviewAlarmReasons" class="text-xs text-slate-600 leading-relaxed"></p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="bg-white border border-slate-200/80 p-5 rounded-3xl text-left flex items-center justify-between">
+            <div class="space-y-1">
+              <span class="text-[10px] uppercase font-bold text-brand-muted">Dynamic Integrity Score</span>
+              <h3 id="kpiScore" class="text-3xl font-black text-brand-dark font-mono">92/100</h3>
+            </div>
+            <span id="kpiScoreIcon" class="p-3 bg-emerald-50 text-brand-success border border-emerald-100 rounded-2xl"><i class="fa-solid fa-square-poll-vertical text-lg"></i></span>
+          </div>
+
+          <div class="bg-white border border-slate-200/80 p-5 rounded-3xl text-left flex items-center justify-between">
+            <div class="space-y-1">
+              <span class="text-[10px] uppercase font-bold text-brand-muted">Calculated Moisture (EMC)</span>
+              <h3 id="kpiEmc" class="text-3xl font-black text-brand-dark font-mono">12.8%</h3>
+            </div>
+            <span id="kpiEmcIcon" class="p-3 bg-blue-50 text-brand-blue border border-blue-100 rounded-2xl"><i class="fa-solid fa-droplet text-lg"></i></span>
+          </div>
+
+          <div class="bg-white border border-slate-200/80 p-5 rounded-3xl text-left flex items-center justify-between">
+            <div class="space-y-1">
+              <span class="text-[10px] uppercase font-bold text-brand-muted">Core Temperature (T3)</span>
+              <h3 id="kpiT3" class="text-3xl font-black text-brand-dark font-mono">29.8°C</h3>
+            </div>
+            <span id="kpiT3Icon" class="p-3 bg-amber-50 text-brand-warning border border-amber-100 rounded-2xl"><i class="fa-solid fa-temperature-three-quarters text-lg"></i></span>
+          </div>
+
+          <div class="bg-white border border-slate-200/80 p-5 rounded-3xl text-left flex items-center justify-between">
+            <div class="space-y-1">
+              <span class="text-[10px] uppercase font-bold text-brand-muted">Operational Phase</span>
+              <h3 id="kpiPhase" class="text-xl font-black text-brand-dark tracking-tight uppercase pt-1">Active Storage</h3>
+            </div>
+            <span class="p-3 bg-slate-100 text-brand-dark border border-slate-200 rounded-2xl"><i class="fa-solid fa-layer-group text-lg"></i></span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          
+          <div class="bg-white border border-slate-200 p-6 rounded-3xl text-left space-y-4 lg:col-span-4 flex flex-col justify-between">
+            <div>
+              <span class="text-[10px] uppercase font-bold text-brand-muted tracking-wider block">Thermodynamic Cross Section</span>
+              <p class="text-[11px] text-brand-muted mt-0.5">Visual interpolation of localized internal pile temperatures.</p>
             </div>
 
-            <div class="flex gap-4 items-center">
-              
-              <!-- 2D Spatial Heap Graphic with SVG Heatmap Gradient interpolation -->
-              <div class="relative w-32 h-36 bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shrink-0 flex items-center justify-center shadow-inner">
-                <!-- Pile Silhouette SVG -->
+            <div class="flex items-center gap-6 my-4 justify-center">
+              <div class="relative w-32 h-40 bg-brand-cream border border-slate-200 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center shrink-0">
                 <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <!-- Gradient definitions initialized dynamically -->
                   <defs>
                     <linearGradient id="heapGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop id="gradStopT1" offset="0%" stop-color="#10b981" />
-                      <stop id="gradStopT2" offset="50%" stop-color="#10b981" />
-                      <stop id="gradStopT3" offset="100%" stop-color="#10b981" />
+                      <stop id="stopT1" offset="0%" stop-color="#10b981" />
+                      <stop id="stopT2" offset="50%" stop-color="#10b981" />
+                      <stop id="stopT3" offset="100%" stop-color="#10b981" />
                     </linearGradient>
                   </defs>
-                  <polygon points="50,10 100,100 0,100" fill="url(#heapGradient)" opacity="0.85" />
+                  <polygon points="50,5 100,100 0,100" fill="url(#heapGradient)" opacity="0.9"/>
                 </svg>
-
-                <!-- Core Sensor Node markers overlay -->
-                <div class="relative z-10 flex flex-col justify-between h-[80%] items-center py-2">
-                  <div id="nodeDotT1" class="w-4 h-4 rounded-full border-2 border-slate-950 shadow bg-emerald-500 transition-colors duration-500"></div>
-                  <div id="nodeDotT2" class="w-4 h-4 rounded-full border-2 border-slate-950 shadow bg-emerald-500 transition-colors duration-500"></div>
-                  <div id="nodeDotT3" class="w-4 h-4 rounded-full border-2 border-slate-950 shadow bg-emerald-500 transition-colors duration-500"></div>
+                <div class="relative z-10 flex flex-col justify-between h-[85%] items-center py-3">
+                  <div id="dotT1" class="w-3.5 h-3.5 rounded-full border-2 border-slate-900 shadow transition-all duration-300"></div>
+                  <div id="dotT2" class="w-3.5 h-3.5 rounded-full border-2 border-slate-900 shadow transition-all duration-300"></div>
+                  <div id="dotT3" class="w-3.5 h-3.5 rounded-full border-2 border-slate-900 shadow transition-all duration-300"></div>
                 </div>
               </div>
 
-              <!-- Metrics value label checklist -->
-              <div class="flex-1 space-y-3">
-                <div class="bg-slate-950 border border-slate-850/80 p-2.5 rounded-xl flex justify-between items-center text-xs">
-                  <span class="text-slate-400 font-medium">T1 (Top 0.2m)</span>
-                  <strong id="nodeValT1" class="font-mono text-white">28.5°C</strong>
+              <div class="flex-1 space-y-2 text-xs">
+                <div class="bg-brand-cream border border-slate-200/80 p-2.5 rounded-xl flex justify-between items-center">
+                  <span class="text-brand-muted font-medium">T1 (Top)</span>
+                  <strong id="labelT1" class="font-mono text-brand-dark">28.5°C</strong>
                 </div>
-                <div class="bg-slate-950 border border-slate-850/80 p-2.5 rounded-xl flex justify-between items-center text-xs">
-                  <span class="text-slate-400 font-medium">T2 (Mid 0.7m)</span>
-                  <strong id="nodeValT2" class="font-mono text-white">29.1°C</strong>
+                <div class="bg-brand-cream border border-slate-200/80 p-2.5 rounded-xl flex justify-between items-center">
+                  <span class="text-brand-muted font-medium">T2 (Mid)</span>
+                  <strong id="labelT2" class="font-mono text-brand-dark">29.1°C</strong>
                 </div>
-                <div class="bg-slate-950 border border-slate-850/80 p-2.5 rounded-xl flex justify-between items-center text-xs">
-                  <span class="text-slate-400 font-medium">T3 (Bottom 1.3m)</span>
-                  <strong id="nodeValT3" class="font-mono text-white">29.8°C</strong>
+                <div class="bg-brand-cream border border-slate-200/80 p-2.5 rounded-xl flex justify-between items-center">
+                  <span class="text-brand-muted font-medium">T3 (Bot)</span>
+                  <strong id="labelT3" class="font-mono text-brand-dark">29.8°C</strong>
                 </div>
               </div>
             </div>
-
-            <p class="text-[10px] text-slate-500 text-left mt-3">Color gradients update dynamically, interpolating localized conduction thermodynamic equations.</p>
+            
+            <button onclick="commitStateToLogs()" class="w-full py-2.5 bg-brand-dark hover:bg-slate-800 font-bold rounded-xl text-xs text-white transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-cube text-[10px]"></i>
+              <span>Capture Telemetry Record</span>
+            </button>
           </div>
 
-          <!-- Sandbox Sensor Calibration Panel -->
-          <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between text-left relative">
+          <div class="bg-white border border-slate-200 p-6 rounded-3xl lg:col-span-8 flex flex-col justify-between">
             <div class="flex justify-between items-center mb-4">
-              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Simulator Controls</span>
-              <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] py-1 px-3 rounded-full font-bold">REALTIME TUNING</span>
+              <span class="text-[10px] uppercase font-bold text-brand-muted tracking-wider block">Live Microclimate Stream Curve</span>
+              <span class="text-[10px] font-bold text-brand-muted font-mono bg-brand-cream py-1 px-2.5 rounded border border-slate-200">REALTIME DATA SNAPSHOTS</span>
             </div>
-
-            <!-- Conditional variable wrappers based on phase state -->
-            <div id="sandboxStorageSliders" class="space-y-4">
-              <div>
-                <div class="flex justify-between text-xs mb-1">
-                  <span class="text-slate-400 font-semibold">T1 Surface Temp</span>
-                  <span id="sliderValT1" class="text-emerald-400 font-mono font-bold">28.5°C</span>
-                </div>
-                <input type="range" id="sliderT1" min="15" max="55" step="0.5" value="28.5" class="w-full accent-emerald-500 bg-slate-950 border border-slate-850 rounded-lg">
-              </div>
-
-              <div>
-                <div class="flex justify-between text-xs mb-1">
-                  <span class="text-slate-400 font-semibold">T2 Middle Temp</span>
-                  <span id="sliderValT2" class="text-emerald-400 font-mono font-bold">29.1°C</span>
-                </div>
-                <input type="range" id="sliderT2" min="15" max="55" step="0.5" value="29.1" class="w-full accent-emerald-500 bg-slate-950 border border-slate-850 rounded-lg">
-              </div>
-
-              <div>
-                <div class="flex justify-between text-xs mb-1">
-                  <span class="text-slate-400 font-semibold">T3 Bottom Temp</span>
-                  <span id="sliderValT3" class="text-emerald-400 font-mono font-bold">29.8°C</span>
-                </div>
-                <input type="range" id="sliderT3" min="15" max="55" step="0.5" value="29.8" class="w-full accent-emerald-500 bg-slate-950 border border-slate-850 rounded-lg">
-              </div>
-
-              <div>
-                <div class="flex justify-between text-xs mb-1">
-                  <span class="text-slate-400 font-semibold">Inter-granular RH</span>
-                  <span id="sliderValRH" class="text-emerald-400 font-mono font-bold">58%</span>
-                </div>
-                <input type="range" id="sliderRH" min="20" max="95" step="1" value="58" class="w-full accent-emerald-500 bg-slate-950 border border-slate-850 rounded-lg">
-              </div>
-            </div>
-
-            <!-- CONDITIONAL DRYING WRAPPERS (Initially hidden) -->
-            <div id="sandboxDryingSliders" class="hidden space-y-4">
-              <div>
-                <div class="flex justify-between text-xs mb-1">
-                  <span class="text-slate-400 font-semibold">Drying Canopy Temp</span>
-                  <span id="sliderValAmbientTemp" class="text-emerald-400 font-mono font-bold">30.0°C</span>
-                </div>
-                <input type="range" id="sliderAmbientTemp" min="15" max="50" step="0.5" value="30" class="w-full accent-emerald-500 bg-slate-950 border border-slate-850 rounded-lg">
-              </div>
-
-              <div>
-                <div class="flex justify-between text-xs mb-1">
-                  <span class="text-slate-400 font-semibold">Drying Yard RH</span>
-                  <span id="sliderValAmbientHumidity" class="text-emerald-400 font-mono font-bold">62%</span>
-                </div>
-                <input type="range" id="sliderAmbientHumidity" min="20" max="95" step="1" value="62" class="w-full accent-emerald-500 bg-slate-950 border border-slate-850 rounded-lg">
-              </div>
-            </div>
-
-            <!-- Sleek Debug Terminal Footer inside controls card -->
-            <div class="mt-4 pt-3 border-t border-slate-800 text-[10px] text-slate-500 font-mono">
-              <span>Simulated Payload: </span>
-              <span id="telemetryStr" class="text-emerald-400 font-semibold font-mono"></span>
+            <div class="flex-1 min-h-[220px] relative">
+              <canvas id="canvasChartElement" class="w-full h-full"></canvas>
             </div>
           </div>
-
         </div>
-
-        <!-- Secondary analytical grid layout: Simulated presets + Dynamic line chart -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          <!-- Test Sandbox Presets Card -->
-          <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-left space-y-4">
-            <div>
-              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-bold block">Testing Sandbox Presets</span>
-              <p class="text-xs text-slate-400 mt-1">Select pre-configured environments to verify calculation parameters and actions instantly.</p>
-            </div>
-
-            <div class="space-y-2">
-              <button id="presetFungal" class="w-full p-2.5 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-850 transition text-left flex items-start gap-2.5">
-                <span class="p-1 bg-red-500/10 text-red-500 border border-red-500/20 rounded-md mt-0.5"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12v-.008Z" /></svg></span>
-                <div>
-                  <span class="text-xs font-bold text-slate-200 block">Severe Localized Hotspot</span>
-                  <span class="text-[9px] text-slate-500">T3 jumps to 44°C inside core layers. High mold risk.</span>
-                </div>
-              </button>
-
-              <button id="presetIdeal" class="w-full p-2.5 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-850 transition text-left flex items-start gap-2.5">
-                <span class="p-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md mt-0.5"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg></span>
-                <div>
-                  <span class="text-xs font-bold text-slate-200 block">Ideal Cold Storage</span>
-                  <span class="text-[9px] text-slate-500">Cool temperatures, 48% inter-granular RH. Safe.</span>
-                </div>
-              </button>
-
-              <button id="presetSunDrying" class="w-full p-2.5 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-850 transition text-left flex items-start gap-2.5">
-                <span class="p-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-md mt-0.5"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m0 13.5V21M4.22 4.22l1.58 1.58m12.42 12.42l1.58 1.58M3 12h2.25m13.5 0H21M4.22 19.78l1.58-1.58M17.62 5.63l1.58-1.58M12 7.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z" /></svg></span>
-                <div>
-                  <span class="text-xs font-bold text-slate-200 block">Dry Sunshine Canopy</span>
-                  <span class="text-[9px] text-slate-500">Temp 35°C, RH 40%. Rapid EMC decrease.</span>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          <!-- Dynamic real-time plotting engine -->
-          <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between text-left lg:col-span-2">
-            <div class="flex justify-between items-center mb-3">
-              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Dynamic Microclimate Tracking Chart</span>
-              <div class="flex gap-4 text-[9px] font-bold tracking-wider">
-                <span class="flex items-center gap-1.5"><span class="w-2.5 h-1 bg-emerald-400 rounded-full block"></span>CALCULATED EMC</span>
-                <span class="flex items-center gap-1.5"><span class="w-2.5 h-1 bg-blue-400 rounded-full block"></span>T3 TEMP</span>
-              </div>
-            </div>
-
-            <!-- Interactive line SVG plotting area -->
-            <div class="flex-1 h-44 bg-slate-950 border border-slate-850 rounded-xl relative p-4 flex items-end">
-              <svg id="liveSvgChart" class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <!-- Grid background paths -->
-                <line x1="0" y1="25" x2="100" y2="25" stroke="#1f2937" stroke-width="0.3" stroke-dasharray="2,2" />
-                <line x1="0" y1="50" x2="100" y2="50" stroke="#1f2937" stroke-width="0.3" stroke-dasharray="2,2" />
-                <line x1="0" y1="75" x2="100" y2="75" stroke="#1f2937" stroke-width="0.3" stroke-dasharray="2,2" />
-                
-                <!-- SVG plot lines -->
-                <path id="chartPathEMC" d="" fill="none" stroke="#10b981" stroke-width="1.5" class="transition-all duration-300" />
-                <path id="chartPathT3" d="" fill="none" stroke="#3b82f6" stroke-width="1.5" class="transition-all duration-300" />
-              </svg>
-              <!-- Chart labels -->
-              <span class="absolute left-2 top-2 text-[8px] font-mono text-slate-600 font-bold uppercase">Y-Axis: Value Tracking</span>
-              <span class="absolute right-2 bottom-1 text-[8px] font-mono text-slate-600 font-bold uppercase">X-Axis: Real-Time Stream</span>
-            </div>
-
-            <div class="flex justify-between items-center text-xs pt-3 mt-3 border-t border-slate-800/60">
-              <span class="text-slate-400 font-medium">Capture simulated values to current database log table:</span>
-              <button onclick="commitStateToLogs()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 font-bold rounded-lg text-xs text-white transition flex items-center gap-1.5 shadow-lg shadow-emerald-950/40">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                Audit Capture Record
-              </button>
-            </div>
-          </div>
-
-        </div>
-
       </div>
 
-
-      <!-- ============================================================================
-          VIEW 2: ADVANCED ADVISORY ENGINE & MOLD MATRIX (TAB ADVISORY)
-          ============================================================================ -->
-      <div id="tabViewAdvisory" class="hidden space-y-6">
-        
-        <div class="p-5 bg-gradient-to-r from-emerald-950/20 to-slate-900 border border-emerald-800/20 rounded-2xl flex items-start gap-4">
-          <span class="p-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21L8.188 15.904L3 15L8.188 14.096L9 9L9.813 14.096L15 15L9.813 15.904ZM18.25 5.25L17.5 9L16.75 5.25L13 4.5L16.75 3.75L17.5 0L18.25 3.75L22 4.5L18.25 5.25Z" /></svg>
-          </span>
-          <div class="text-left space-y-1">
-            <h2 class="text-base font-extrabold text-white tracking-wide">Interactive Mitigation Advisory Engine</h2>
-            <p class="text-xs text-slate-400 leading-normal">
-              Based on empirical coefficients compiled from multi-country FAO and post-harvest technology guidelines. The rules analyze live spatial anomalies, transient averages, and environmental moisture dynamics to yield step-by-step mitigation planners.
-            </p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div id="viewAdvisory" class="hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           
-          <!-- Specific Biological Prediction Indexes -->
-          <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-5 text-left">
+          <div class="bg-white border border-slate-200 p-6 rounded-3xl space-y-6 lg:col-span-4 text-left flex flex-col justify-between">
             <div>
-              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Fungal/Mycotoxin Hazard Indexes</span>
-              <p class="text-xs text-slate-500 mt-0.5">Physical hazard indexes calculated dynamically.</p>
+              <span class="text-[10px] uppercase font-bold text-brand-muted tracking-wider block">Biological Hazard Diagnostics</span>
+              <p class="text-[11px] text-brand-muted mt-0.5">Calculations derived from continuous mathematical modeling loops.</p>
             </div>
 
-            <div class="space-y-4">
-              <div class="bg-slate-950 border border-slate-850 p-4 rounded-xl flex flex-col gap-2">
+            <div class="space-y-5 flex-1 flex flex-col justify-center">
+              <div class="space-y-2">
                 <div class="flex justify-between items-center text-xs">
-                  <span class="text-slate-400">Mold Spore Proliferation Limit:</span>
-                  <strong id="advisoryMoldStatus" class="font-bold text-emerald-400">INHIBITED</strong>
+                  <span class="text-slate-600 font-medium">Mold Spore Proliferation:</span>
+                  <strong id="idxMold" class="font-bold text-brand-success font-mono text-[11px]">INHIBITED</strong>
                 </div>
-                <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
-                  <div id="advisoryMoldProgress" class="w-2/12 bg-emerald-400 h-full transition-all duration-500"></div>
+                <div class="w-full bg-brand-cream h-1.5 rounded-full overflow-hidden border border-slate-200/40">
+                  <div id="barMold" class="w-2/12 bg-brand-success h-full transition-all duration-500"></div>
                 </div>
               </div>
 
-              <div class="bg-slate-950 border border-slate-850 p-4 rounded-xl flex flex-col gap-2">
+              <div class="space-y-2">
                 <div class="flex justify-between items-center text-xs">
-                  <span class="text-slate-400">Aflatoxin Infestation Risk:</span>
-                  <strong id="advisoryAflatoxinStatus" class="font-bold text-emerald-400">MINIMUM</strong>
+                  <span class="text-slate-600 font-medium">Aflatoxin Infestation Risk:</span>
+                  <strong id="idxAflatoxin" class="font-bold text-brand-success font-mono text-[11px]">MINIMUM</strong>
                 </div>
-                <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
-                  <div id="advisoryAflatoxinProgress" class="w-1/12 bg-emerald-400 h-full transition-all duration-500"></div>
+                <div class="w-full bg-brand-cream h-1.5 rounded-full overflow-hidden border border-slate-200/40">
+                  <div id="barAflatoxin" class="w-1/12 bg-brand-success h-full transition-all duration-500"></div>
                 </div>
               </div>
 
-              <div class="bg-slate-950 border border-slate-850 p-4 rounded-xl flex flex-col gap-2">
+              <div class="space-y-2">
                 <div class="flex justify-between items-center text-xs">
-                  <span class="text-slate-400">Insect Respiration Rate:</span>
-                  <strong id="advisoryInsectStatus" class="font-bold text-emerald-400">NOMINAL</strong>
+                  <span class="text-slate-600 font-medium">Insect Metabolism Speed:</span>
+                  <strong id="idxInsect" class="font-bold text-brand-success font-mono text-[11px]">NOMINAL</strong>
                 </div>
-                <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
-                  <div id="advisoryInsectProgress" class="w-3/12 bg-emerald-400 h-full transition-all duration-500"></div>
+                <div class="w-full bg-brand-cream h-1.5 rounded-full overflow-hidden border border-slate-200/40">
+                  <div id="barInsect" class="w-3/12 bg-brand-success h-full transition-all duration-500"></div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Step-by-Step Action Plan Details -->
-          <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-left lg:col-span-2 space-y-4">
+          <div class="bg-white border border-slate-200 p-6 rounded-3xl text-left lg:col-span-8 space-y-4">
             <div>
-              <span class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Recommended Mitigation Workflows</span>
-              <h3 class="text-lg font-bold text-slate-100 mt-1">Actions to protect harvest asset reserves:</h3>
+              <span class="text-[10px] uppercase font-bold text-brand-muted tracking-wider block">Recommended Action Workflows</span>
+              <h3 class="text-md font-bold text-brand-dark mt-0.5">Deterministic mitigation steps to protect reserve inventory assets:</h3>
             </div>
-
-            <!-- Interactive Dynamic List of Advisory recommendations -->
-            <div id="advisoryListWrapper" class="space-y-3.5">
-              <!-- Rendered Dynamically -->
-            </div>
+            <div id="boxAdvisoryList" class="space-y-3 pt-2">
+              </div>
           </div>
-
         </div>
-
       </div>
 
-
-      <!-- ============================================================================
-          VIEW 3: WAREHOUSE DATABASE RECORDS (TAB AUDIT)
-          ============================================================================ -->
-      <div id="tabViewAudit" class="hidden space-y-6">
-        
-        <div class="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-800 shrink-0 text-left">
-          <div class="space-y-0.5">
-            <span class="text-slate-400 font-bold uppercase text-[10px]">Harvest Tracking Audits</span>
-            <h2 class="text-sm font-extrabold text-white">Capture Records Database</h2>
-          </div>
-          <span id="auditTableCount" class="text-[10px] bg-slate-950 border border-slate-800 text-emerald-400 py-1.5 px-3.5 rounded-full font-bold font-mono">
-            4 ARCHIVED RECORDS
-          </span>
-        </div>
-
-        <!-- Scrollable audit database table -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl text-left">
+      <div id="viewLogs" class="hidden space-y-6">
+        <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm text-left">
           <div class="overflow-x-auto">
             <table class="w-full text-xs text-left">
-              <thead class="bg-slate-950 border-b border-slate-850 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+              <thead class="bg-brand-cream border-b border-slate-200 text-brand-muted text-[10px] uppercase font-bold tracking-wider">
                 <tr>
-                  <th class="py-4 px-6">Timestamp Index</th>
+                  <th class="py-4 px-6 font-mono">Timestamp Index</th>
                   <th class="py-4 px-6">Crop Variety</th>
                   <th class="py-4 px-6">Phasic Mode</th>
                   <th class="py-4 px-6">Calculated Moisture (EMC)</th>
-                  <th class="py-4 px-6">Core Temp Average</th>
-                  <th class="py-4 px-6">Calculated Risk Index</th>
+                  <th class="py-4 px-6">Thermal Stack Average</th>
+                  <th class="py-4 px-6">System Threat Index</th>
                 </tr>
               </thead>
-              <tbody id="auditTableBody" class="divide-y divide-slate-850 font-medium">
-                <!-- Rendered dynamically -->
-              </tbody>
+              <tbody id="domAuditTableBody" class="divide-y divide-slate-100 font-medium text-brand-dark/90">
+                </tbody>
             </table>
           </div>
         </div>
-
+        <div class="flex justify-end">
+          <button onclick="clearLocalStorageLogs()" class="px-4 py-2 border border-brand-danger/30 hover:bg-red-50 text-brand-danger text-xs font-bold rounded-xl transition-all">
+            <i class="fa-solid fa-trash-can mr-1.5"></i> Clear Archived Logs Database
+          </button>
+        </div>
       </div>
 
-    </main>
+    </div>
+  </section>
 
-  </div>
+  <section id="research" class="bg-white border-t border-slate-200 py-24 text-left">
+    <div class="max-w-7xl mx-auto w-full px-6 lg:px-16 space-y-16">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div class="lg:col-span-7 space-y-6">
+          <span class="text-[11px] font-bold text-brand-success uppercase tracking-widest font-mono block">Socio-Economic Context</span>
+          <h2 class="text-4xl font-black tracking-tight text-brand-dark leading-tight">Post-Harvest Challenges for Smallholder Farmers</h2>
+          <p class="text-sm text-brand-muted leading-relaxed">
+            In agricultural economies like India and Sub-Saharan Africa, smallholder farmers lose up to <strong>15% to 25%</strong> of their grain value post-harvest. Traditional, experience-based touch or visual inspections are subjective, masking core moisture pockets that accelerate thermal respiration and fatal fungal mycotoxins like aflatoxins.
+          </p>
+          <div class="grid grid-cols-3 gap-6 pt-4 text-center">
+            <div class="bg-brand-cream border border-slate-200/80 p-4 rounded-2xl">
+              <h4 class="text-3xl font-black text-brand-danger font-mono">25%</h4>
+              <p class="text-[10px] font-bold text-brand-muted uppercase tracking-wider mt-1">Average Volume Loss</p>
+            </div>
+            <div class="bg-brand-cream border border-slate-200/80 p-4 rounded-2xl">
+              <h4 class="text-3xl font-black text-brand-warning font-mono">&lt;1 Season</h4>
+              <p class="text-[10px] font-bold text-brand-muted uppercase tracking-wider mt-1">Device ROI Window</p>
+            </div>
+            <div class="bg-brand-cream border border-slate-200/80 p-4 rounded-2xl">
+              <h4 class="text-3xl font-black text-brand-success font-mono">$37.10</h4>
+              <p class="text-[10px] font-bold text-brand-muted uppercase tracking-wider mt-1">SaaS Production BOM</p>
+            </div>
+          </div>
+        </div>
 
-  <!-- ============================================================================
-      DYNAMIC WEB PLATFORM LOGIC (STATE MACHINE & FORMULATORS)
-      ============================================================================ -->
+        <div class="lg:col-span-5 bg-brand-cream border border-slate-200 p-6 rounded-4xl space-y-6 relative">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-brand-dark border-b border-slate-200/60 pb-3">Processing Stack Data-Flow</h3>
+          
+          <div class="space-y-4 font-medium text-xs text-left relative pl-4 border-l border-slate-300 ml-2">
+            <div class="relative">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand-dark absolute -left-[21px] top-1 border-2 border-brand-cream"></span>
+              <strong class="text-brand-dark">Physical Sensors Array</strong>
+              <p class="text-[11px] text-brand-muted mt-0.5">DS18B20 1-Wire chains and SHT31 tip architectures read data metrics.</p>
+            </div>
+            <div class="relative">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand-dark absolute -left-[21px] top-1 border-2 border-brand-cream"></span>
+              <strong class="text-brand-dark">ESP32 Core Microprocessor</strong>
+              <p class="text-[11px] text-brand-muted mt-0.5">Executes low-power duty deep sleep regimes and computes Henderson equations.</p>
+            </div>
+            <div class="relative">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand-dark absolute -left-[21px] top-1 border-2 border-brand-cream"></span>
+              <strong class="text-brand-dark">BLE Broadcast Telemetry</strong>
+              <p class="text-[11px] text-brand-muted mt-0.5">Streams secure custom data strings directly to the customer dashboard platform.</p>
+            </div>
+            <div class="relative">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand-dark absolute -left-[21px] top-1 border-2 border-brand-cream"></span>
+              <strong class="text-brand-dark">Deterministic Threat Assessment</strong>
+              <p class="text-[11px] text-brand-muted mt-0.5">Calculates biological decay factors and recommends real-time protective workflows.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-brand-dark text-slate-400 py-12 px-8 lg:px-16 border-t border-slate-800 mt-auto text-sm text-left">
+    <div class="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div class="space-y-3">
+        <div class="flex items-center gap-2 text-white">
+          <div class="w-7 h-7 bg-slate-800 rounded-lg flex items-center justify-center text-brand-primary">
+            <i class="fa-solid fa-shield-halved text-xs"></i>
+          </div>
+          <span class="font-bold tracking-tight">GrainGuardian</span>
+        </div>
+        <p class="text-xs text-slate-500 leading-relaxed">Integrated pre-storage drying validation and deep multi-depth structural monitoring arrays.</p>
+      </div>
+      <div>
+        <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-3">EPICS Technology</h4>
+        <div class="flex flex-col gap-2 text-xs">
+          <span>ESP32 Telemetry Dev Kits</span>
+          <span>1-Wire Multi-Depth Arrays</span>
+          <span>Sintered Mesh Protection Caps</span>
+        </div>
+      </div>
+      <div>
+        <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-3">Academic Research</h4>
+        <div class="flex flex-col gap-2 text-xs">
+          <span>Equilibrium Moisture Equations</span>
+          <span>Fourier Heat Transport Conduction</span>
+          <span>Socio-Economic Smallholder ROI</span>
+        </div>
+      </div>
+      <div>
+        <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-3">Engineering Service</h4>
+        <div class="flex flex-col gap-2 text-xs">
+          <span>Vuyyuru Local Cooperatives</span>
+          <span>FPO Scalability Frameworks</span>
+          <span>UN Sustainability SDG Goals</span>
+        </div>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto w-full border-t border-slate-800/80 pt-6 mt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-600 gap-4">
+      <span>&copy; 2026 GrainGuardian Platform. Global Rights Reserved. Engineered via EPICS Methodology.</span>
+      <div class="flex gap-6">
+        <span>SaaS Framework Documentation</span>
+        <span>IEEE Paper Repository</span>
+      </div>
+    </div>
+  </footer>
+
   <script>
+    // Global chart instance storage tracker
+    let liveChartInstance = null;
+
     // ============================================================================
-    // APPLICATION ARCHITECTURAL STATES
+    // APPLICATION ARCHITECTURAL DATA STATES
     // ============================================================================
     const CROP_DATABASE = [
       { id: 0, name: "Paddy (Rice)", c1: 1.9187e-5, c2: 51.161, c3: 2.4484, safeLimit: 13.5 },
@@ -560,10 +629,9 @@
     ];
 
     const state = {
-      currentScreen: 'overview',
+      currentTab: 'overview',
       selectedCropIndex: 0,
       bleConnected: true,
-      farmerName: "Rajesh Kumar",
       isStorageMode: true,
 
       // Live calibrator values (Storage Mode)
@@ -576,55 +644,49 @@
       ambientTemp: 30.0,
       ambientHumidity: 62.0,
 
-      // Plot data lists
+      // Realtime plot metrics lines arrays
       chartHistoryEMC: [12.2, 12.8, 12.5, 12.4, 13.0, 12.7, 12.9, 12.8],
       chartHistoryT3: [25.0, 26.5, 27.2, 28.1, 29.0, 29.4, 29.6, 29.8],
 
-      // Timeline Databases
-      historyLog: [
+      // Timeline Databases logs
+      historyLog: []
+    };
+
+    // Initialize state database loading safely via LocalStorage
+    function loadPersistedHistoryLogs() {
+      const saved = localStorage.getItem("grainLogs_v2");
+      if (saved) {
+        try {
+          state.historyLog = JSON.parse(saved);
+        } catch(e) {
+          state.historyLog = getDefaultHistoryLogs();
+        }
+      } else {
+        state.historyLog = getDefaultHistoryLogs();
+        localStorage.setItem("grainLogs_v2", JSON.stringify(state.historyLog));
+      }
+    }
+
+    function getDefaultHistoryLogs() {
+      return [
         { id: 1, date: "2026-06-05 14:20", crop: "Paddy", mode: "Storage", score: 92, status: "SAFE", emc: 12.8, tAvg: 29.2 },
         { id: 2, date: "2026-06-03 10:15", crop: "Paddy", mode: "Drying", score: 45, status: "WARNING", emc: 15.2, tAvg: 32.4 },
         { id: 3, date: "2026-05-28 09:00", crop: "Wheat", mode: "Storage", score: 96, status: "SAFE", emc: 12.1, tAvg: 26.8 },
         { id: 4, date: "2026-05-15 16:40", crop: "Paddy", mode: "Storage", score: 32, status: "CRITICAL", emc: 16.4, tAvg: 41.5 }
-      ]
-    };
+      ];
+    }
+
+    function clearLocalStorageLogs() {
+      state.historyLog = [];
+      localStorage.setItem("grainLogs_v2", JSON.stringify([]));
+      ui.updateAuditDatabasePage();
+    }
 
     // ============================================================================
-    // THE CORE MATHEMATICAL FORMULATIONS
+    // MATHEMATICAL LOGIC CALCULATIONS
     // ============================================================================
     function getActiveCrop() {
       return CROP_DATABASE[state.selectedCropIndex];
-    }
-
-    // Dynamic temperature hex color parser
-    function interpolateTempColor(temp) {
-      if (temp <= 15) return "#10b981"; // Fresh green
-      if (temp >= 45) return "#ef4444"; // Hotspot Red
-      
-      if (temp <= 28) {
-        // Interpolate between Green (#10b981) and Soft Amber (#f59e0b)
-        const factor = (temp - 15) / (28 - 15);
-        return interpolateColors("#10b981", "#f59e0b", factor);
-      } else {
-        // Interpolate between Amber (#f59e0b) and Crimson Red (#ef4444)
-        const factor = (temp - 28) / (45 - 28);
-        return interpolateColors("#f59e0b", "#ef4444", factor);
-      }
-    }
-
-    function interpolateColors(color1, color2, factor) {
-      const parseHex = (c) => parseInt(c.slice(1), 16);
-      const hex1 = parseHex(color1);
-      const hex2 = parseHex(color2);
-
-      const r1 = (hex1 >> 16) & 255, g1 = (hex1 >> 8) & 255, b1 = hex1 & 255;
-      const r2 = (hex2 >> 16) & 255, g2 = (hex2 >> 8) & 255, b2 = hex2 & 255;
-
-      const r = Math.round(r1 + factor * (r2 - r1));
-      const g = Math.round(g1 + factor * (g2 - g1));
-      const b = Math.round(b1 + factor * (b2 - b1));
-
-      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
     }
 
     function calculateEMC(temp, rh, crop) {
@@ -644,14 +706,14 @@
       let score = 100;
       let reasons = [];
 
-      // 1. Moisture overshoots
+      // 1. Moisture deviations
       const moistureGap = currentEMC - crop.safeLimit;
       if (moistureGap > 0) {
         score -= Math.round(moistureGap * 15);
-        reasons.push(`Physical moisture envelope has climbed to ${currentEMC.toFixed(1)}%, surpassing the variety limit (${crop.safeLimit}%).`);
+        reasons.push(`Physical moisture envelopes have climbed to ${currentEMC.toFixed(1)}%, surpassing safe thresholds (${crop.safeLimit}%).`);
       }
 
-      // 2. Spatial anomalies (Fourier heat delta)
+      // 2. Heat conduction deltas
       const maxDiff = Math.max(
         Math.abs(state.tempT1 - state.tempT2),
         Math.abs(state.tempT2 - state.tempT3),
@@ -659,14 +721,14 @@
       );
       if (maxDiff > 4.0) {
         score -= 25;
-        reasons.push(`Elevated core thermal disparity detected (ΔT = ${maxDiff.toFixed(1)}°C). Indicates internal active hotspots.`);
+        reasons.push(`Elevated thermal gradient delta identified (ΔT = ${maxDiff.toFixed(1)}°C). Core respiration indicated active hotspot development.`);
       }
 
-      // 3. Absolute Biological Respiration limits
+      // 3. Absolute peak thresholds
       const absoluteMax = Math.max(state.tempT1, state.tempT2, state.tempT3);
       if (absoluteMax > 38.0) {
         score -= 30;
-        reasons.push(`Absolute inner nodes report extreme temperature averages (${absoluteMax.toFixed(1)}°C).`);
+        reasons.push(`Inner sensor node components show absolute hyper-heating spikes (${absoluteMax.toFixed(1)}°C).`);
       }
 
       score = Math.max(0, Math.min(100, score));
@@ -677,349 +739,349 @@
       return { score, status, reasons, currentEMC, maxDiff, absoluteMax };
     }
 
+    function interpolateTempColor(temp) {
+      if (temp <= 15) return "#10b981"; // Safe Green
+      if (temp >= 45) return "#ef4444"; // Hazard Red
+      
+      const parseHex = (c) => parseInt(c.slice(1), 16);
+      const mixHex = (c1, c2, f) => {
+        const h1 = parseHex(c1), h2 = parseHex(c2);
+        const r = Math.round(((h1 >> 16) & 255) + f * (((h2 >> 16) & 255) - ((h1 >> 16) & 255)));
+        const g = Math.round(((h1 >> 8) & 255) + f * (((h2 >> 8) & 255) - ((h1 >> 8) & 255)));
+        const b = Math.round((h1 & 255) + f * ((h2 & 255) - (h1 & 255)));
+        return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+      };
+
+      if (temp <= 28) {
+        return mixHex("#10b981", "#f59e0b", (temp - 15) / (28 - 15));
+      } else {
+        return mixHex("#f59e0b", "#ef4444", (temp - 28) / (45 - 28));
+      }
+    }
+
     // ============================================================================
-    // APPLICATION RENDERING ENGINE
+    // DISPLAY PLATFORM PRESENTATION INTERFACES
     // ============================================================================
     const ui = {
       updateOverview: function() {
-        const crop = getActiveCrop();
         const metrics = computeHealthMetrics();
+        const activeCropObj = getActiveCrop();
 
-        // 1. Radial Health Score Update
-        document.getElementById('radialGaugeScore').innerText = metrics.score;
-        const progressOffset = 263.8 - (263.8 * metrics.score) / 100;
-        document.getElementById('radialGaugeProgress').setAttribute('stroke-dashoffset', progressOffset);
+        // 1. KPI parameters bindings
+        document.getElementById('kpiScore').innerText = `${metrics.score}/100`;
+        document.getElementById('kpiEmc').innerText = `${metrics.currentEMC.toFixed(1)}%`;
+        document.getElementById('kpiT3').innerText = `${state.tempT3.toFixed(1)}°C`;
+        document.getElementById('kpiPhase').innerText = state.isStorageMode ? "Active Storage" : "Drying Canopy";
 
-        let strokeColor = '#10b981'; // Green
-        let frameGlowClass = 'bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col items-center justify-between text-center relative glow-emerald';
-        let badgeHtml = 'SAFE STORAGE';
-        let badgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+        // Dynamic theme alerts configurations
+        let strokeColor = '#10b981';
+        let badgeText = 'SAFE STORAGE';
+        let frameGlow = 'bg-white border border-slate-200 p-6 rounded-3xl text-left flex items-center justify-between';
+        const alarmOverlay = document.getElementById('viewOverviewAlarmOverlay');
 
         if (metrics.status === 'WARNING') {
-          strokeColor = '#f59e0b'; // Yellow
-          frameGlowClass = 'bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col items-center justify-between text-center relative glow-amber';
-          badgeHtml = 'CRITICAL WARNING';
-          badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+          strokeColor = '#f59e0b';
+          badgeText = 'CAUTION WARNING';
+          document.getElementById('kpiScoreIcon').className = 'p-3 bg-amber-50 text-brand-warning border border-amber-100 rounded-2xl';
         } else if (metrics.status === 'CRITICAL') {
-          strokeColor = '#ef4444'; // Red
-          frameGlowClass = 'bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col items-center justify-between text-center relative glow-rose';
-          badgeHtml = 'CRITICAL DANGER';
-          badgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+          strokeColor = '#ef4444';
+          badgeText = 'CRITICAL THREAT';
+          document.getElementById('kpiScoreIcon').className = 'p-3 bg-rose-50 text-brand-danger border border-rose-100 rounded-2xl';
+        } else {
+          document.getElementById('kpiScoreIcon').className = 'p-3 bg-emerald-50 text-brand-success border border-emerald-100 rounded-2xl';
         }
 
-        document.getElementById('radialGaugeProgress').setAttribute('stroke', strokeColor);
-        document.getElementById('healthCardFrame').className = frameGlowClass;
-        document.getElementById('healthCardStatusBadge').innerText = badgeHtml;
-        document.getElementById('healthCardStatusBadge').className = `${badgeClass} border text-[9px] py-1 px-3 rounded-full font-bold`;
+        if (metrics.status === 'CRITICAL') {
+          alarmOverlay.classList.remove('hidden');
+          document.getElementById('txtOverviewAlarmReasons').innerText = metrics.reasons.join(' | ');
+        } else {
+          alarmOverlay.classList.add('hidden');
+        }
 
-        document.getElementById('healthCardModeText').innerText = state.isStorageMode ? "Active Storage" : "Drying Canopy";
-        document.getElementById('healthCardEmcText').innerText = `${metrics.currentEMC.toFixed(1)}%`;
-        document.getElementById('healthCardEmcText').className = `font-mono font-bold ${metrics.status === 'SAFE' ? 'text-emerald-400' : metrics.status === 'WARNING' ? 'text-amber-400' : 'text-red-400'}`;
-
-        // 2. Heatmap Gradient Parsing
+        // 2. Spatial 2D Interpolator Definitions
         const c1 = interpolateTempColor(state.tempT1);
         const c2 = interpolateTempColor(state.tempT2);
         const c3 = interpolateTempColor(state.tempT3);
 
-        document.getElementById('gradStopT1').setAttribute('stop-color', c1);
-        document.getElementById('gradStopT2').setAttribute('stop-color', c2);
-        document.getElementById('gradStopT3').setAttribute('stop-color', c3);
+        document.getElementById('stopT1').setAttribute('stop-color', c1);
+        document.getElementById('stopT2').setAttribute('stop-color', c2);
+        document.getElementById('stopT3').setAttribute('stop-color', c3);
 
-        // Update visualizer core node marker colors
-        document.getElementById('nodeDotT1').style.backgroundColor = c1;
-        document.getElementById('nodeDotT2').style.backgroundColor = c2;
-        document.getElementById('nodeDotT3').style.backgroundColor = c3;
+        document.getElementById('dotT1').style.backgroundColor = c1;
+        document.getElementById('dotT2').style.backgroundColor = c2;
+        document.getElementById('dotT3').style.backgroundColor = c3;
 
-        document.getElementById('nodeValT1').innerText = `${state.tempT1.toFixed(1)}°C`;
-        document.getElementById('nodeValT2').innerText = `${state.tempT2.toFixed(1)}°C`;
-        document.getElementById('nodeValT3').innerText = `${state.tempT3.toFixed(1)}°C`;
+        document.getElementById('labelT1').innerText = `${state.tempT1.toFixed(1)}°C`;
+        document.getElementById('labelT2').innerText = `${state.tempT2.toFixed(1)}°C`;
+        document.getElementById('labelT3').innerText = `${state.tempT3.toFixed(1)}°C`;
 
-        // 3. Dynamic Warning Overlay Trigger
-        const alarmBox = document.getElementById('systemAlarmOverlay');
-        if (metrics.status === 'CRITICAL') {
-          alarmBox.classList.remove('hidden');
-          document.getElementById('systemAlarmText').innerText = metrics.reasons[0] || 'High fungal/infestation risks inside core layers.';
-        } else {
-          alarmBox.classList.add('hidden');
-        }
-
-        // Live SVG Plot Update
-        this.plotSvgChart(metrics.currentEMC, state.tempT3);
+        // 3. Update ChartJS Plot
+        this.appendChartTelemetryData(metrics.currentEMC, state.tempT3);
       },
 
       updateAdvisoryPage: function() {
         const metrics = computeHealthMetrics();
         const activeCropObj = getActiveCrop();
-        
-        // Dynamic status computation
-        let moldProgress = 10;
-        let moldStatus = 'INHIBITED';
-        let moldColor = 'text-emerald-400';
-        let moldBarClass = 'bg-emerald-400';
 
-        if (metrics.currentEMC > 14.5) {
-          moldProgress = 85;
-          moldStatus = 'CRITICAL (48H LIMIT)';
-          moldColor = 'text-red-400 animate-pulse';
-          moldBarClass = 'bg-red-500';
-        } else if (metrics.currentEMC > 13.5) {
-          moldProgress = 50;
-          moldStatus = 'ELEVATED GROWTH RISK';
-          moldColor = 'text-amber-400';
-          moldBarClass = 'bg-amber-400';
-        }
+        // Mold, aflatoxin, insect risk indicators recalculator
+        let moldProgress = 15, moldText = 'INHIBITED', moldColor = 'text-brand-success', moldBar = 'bg-brand-success';
+        if (metrics.currentEMC > 14.5) { dest = 90; moldText = 'CRITICAL (48H PROPAGATION)'; moldColor = 'text-brand-danger font-bold animate-pulse'; moldBar = 'bg-brand-danger'; moldProgress = 85;}
+        else if (metrics.currentEMC > 13.5) { moldText = 'ELEVATED SEED THREAT'; moldColor = 'text-brand-warning'; moldBar = 'bg-brand-warning'; moldProgress = 55;}
 
-        document.getElementById('advisoryMoldStatus').innerText = moldStatus;
-        document.getElementById('advisoryMoldStatus').className = `font-bold text-xs ${moldColor}`;
-        document.getElementById('advisoryMoldProgress').style.width = `${moldProgress}%`;
-        document.getElementById('advisoryMoldProgress').className = `h-full transition-all duration-500 ${moldBarClass}`;
+        document.getElementById('idxMold').innerText = moldText;
+        document.getElementById('idxMold').className = `font-bold font-mono text-[11px] ${moldColor}`;
+        document.getElementById('barMold').className = `h-full transition-all duration-500 ${moldBar}`;
+        document.getElementById('barMold').style.width = `${moldProgress}%`;
 
-        // Aflatoxins
-        let aflatoxinProgress = 5;
-        let aflatoxinStatus = 'MINIMUM';
-        let aflatoxinColor = 'text-emerald-400';
-        let aflatoxinBarClass = 'bg-emerald-400';
+        let aflatoxinProgress = 5, aflaText = 'SAFE MATRIX', aflaColor = 'text-brand-success', aflaBar = 'bg-brand-success';
+        if (metrics.currentEMC > 15.5) { aflaText = 'SEVERE AFLATOXIN SPIKE'; aflaColor = 'text-brand-danger animate-pulse'; aflaBar = 'bg-brand-danger'; aflatoxinProgress = 92; }
+        else if (metrics.currentEMC > 14.0) { aflaText = 'RISK SPECTRUM OPEN'; aflaColor = 'text-brand-warning'; aflaBar = 'bg-brand-warning'; aflatoxinProgress = 48; }
 
-        if (metrics.currentEMC > 15.5) {
-          aflatoxinProgress = 90;
-          aflatoxinStatus = 'HIGH THREAT ENVELOPE';
-          aflatoxinColor = 'text-red-400 animate-pulse';
-          aflatoxinBarClass = 'bg-red-500';
-        } else if (metrics.currentEMC > 14.0) {
-          aflatoxinProgress = 45;
-          aflatoxinStatus = 'MODERATE SPECTRUM';
-          aflatoxinColor = 'text-amber-400';
-          aflatoxinBarClass = 'bg-amber-400';
-        }
+        document.getElementById('idxAflatoxin').innerText = aflaText;
+        document.getElementById('idxAflatoxin').className = `font-bold font-mono text-[11px] ${aflatColor}`;
+        document.getElementById('barAflatoxin').className = `h-full transition-all duration-500 ${aflaBar}`;
+        document.getElementById('barAflatoxin').style.width = `${aflatoxinProgress}%`;
 
-        document.getElementById('advisoryAflatoxinStatus').innerText = aflatoxinStatus;
-        document.getElementById('advisoryAflatoxinStatus').className = `font-bold text-xs ${aflatoxinColor}`;
-        document.getElementById('advisoryAflatoxinProgress').style.width = `${aflatoxinProgress}%`;
-        document.getElementById('advisoryAflatoxinProgress').className = `h-full transition-all duration-500 ${aflatoxinBarClass}`;
-
-        // Insects
         const peakTemp = Math.max(state.tempT1, state.tempT2, state.tempT3);
-        let insectProgress = 20;
-        let insectStatus = 'NOMINAL';
-        let insectColor = 'text-emerald-400';
-        let insectBarClass = 'bg-emerald-400';
+        let insectProgress = 20, insText = 'NOMINAL', insColor = 'text-brand-success', insBar = 'bg-brand-success';
+        if (peakTemp > 38.0) { insText = 'EXPONENTIAL RESPIRATION'; insColor = 'text-brand-danger'; insBar = 'bg-brand-danger'; insectProgress = 90; }
+        else if (peakTemp > 31.0) { insText = 'METABOLISM ACCELERATING'; insColor = 'text-brand-warning'; insBar = 'bg-brand-warning'; insectProgress = 60; }
 
-        if (peakTemp > 38.0) {
-          insectProgress = 95;
-          insectStatus = 'EXPONENTIAL GROWTH';
-          insectColor = 'text-red-400';
-          insectBarClass = 'bg-red-500';
-        } else if (peakTemp > 32.0) {
-          insectProgress = 60;
-          insectStatus = 'ACTIVE SPECIES METABOLISM';
-          insectColor = 'text-amber-400';
-          insectBarClass = 'bg-amber-400';
-        }
+        document.getElementById('idxInsect').innerText = insText;
+        document.getElementById('idxInsect').className = `font-bold font-mono text-[11px] ${insColor}`;
+        document.getElementById('barInsect').className = `h-full transition-all duration-500 ${insBar}`;
+        document.getElementById('barInsect').style.width = `${insectProgress}%`;
 
-        document.getElementById('advisoryInsectStatus').innerText = insectStatus;
-        document.getElementById('advisoryInsectStatus').className = `font-bold text-xs ${insectColor}`;
-        document.getElementById('advisoryInsectProgress').style.width = `${insectProgress}%`;
-        document.getElementById('advisoryInsectProgress').className = `h-full transition-all duration-500 ${insectBarClass}`;
-
-        // Re-render Dynamic Advisory Recommendations list
-        const advisoryList = document.getElementById('advisoryListWrapper');
+        // Action workflow lists builder
+        const wrapper = document.getElementById('boxAdvisoryList');
         let listHtml = '';
 
         if (metrics.status === 'SAFE') {
           listHtml = `
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-850 space-y-1">
-              <div class="flex items-center gap-2.5 font-bold text-emerald-400 text-xs">
-                <span class="w-5 h-5 rounded-full bg-emerald-950 border border-emerald-800 flex items-center justify-center text-[10px] font-mono">1</span>
-                <span>HARVEST QUALITY TARGET CONFORMS</span>
+            <div class="bg-brand-cream p-4 rounded-2xl border border-slate-200/60 space-y-1">
+              <div class="flex items-center gap-2 font-bold text-brand-success text-xs">
+                <span class="w-5 h-5 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-[10px] font-mono text-brand-success">1</span>
+                <span>HARVEST PARAMETERS ARE CONFORMANT</span>
               </div>
-              <p class="text-xs text-slate-400 pl-7 leading-relaxed">
-                Measured Moisture limits conform precisely to target variety ranges (${metrics.currentEMC.toFixed(1)}%). Proceed to store the grain in standard bags or silos safely.
-              </p>
+              <p class="text-xs text-brand-muted pl-7 leading-relaxed">Dynamic boundaries match equilibrium targets (${metrics.currentEMC.toFixed(1)}%). Proceed to store the grain batch into standard dry bins or bag stacks safely.</p>
             </div>
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-850 space-y-1">
-              <div class="flex items-center gap-2.5 font-bold text-slate-300 text-xs">
-                <span class="w-5 h-5 rounded-full bg-slate-855 border border-slate-700 flex items-center justify-center text-[10px] font-mono">2</span>
-                <span>ROUTINE TELEMETRY AUDITING</span>
+            <div class="bg-brand-cream p-4 rounded-2xl border border-slate-200/60 space-y-1">
+              <div class="flex items-center gap-2 font-bold text-slate-700 text-xs">
+                <span class="w-5 h-5 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-[10px] font-mono text-slate-600">2</span>
+                <span>ROUTINE INTERVAL SAMPLING</span>
               </div>
-              <p class="text-xs text-slate-400 pl-7 leading-relaxed">
-                Log storage telemetry snapshots every 3 days. Use the Dallas waterproof multi-depth arrays to verify spatial uniformity is maintained.
-              </p>
+              <p class="text-xs text-brand-muted pl-7 leading-relaxed">Execute standard testing loops every 3 days. Use the multi-depth sensor lines to check for internal moisture shifting anomalies.</p>
             </div>
           `;
         } else if (metrics.status === 'WARNING') {
           listHtml = `
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-850 space-y-1">
-              <div class="flex items-center gap-2.5 font-bold text-amber-400 text-xs">
-                <span class="w-5 h-5 rounded-full bg-amber-950 border border-amber-800 flex items-center justify-center text-[10px] font-mono">1</span>
-                <span>ACTIVATE MECHANICAL EXTRACTION FANS</span>
+            <div class="bg-brand-cream p-4 rounded-2xl border border-slate-200/60 space-y-1">
+              <div class="flex items-center gap-2 font-bold text-brand-warning text-xs">
+                <span class="w-5 h-5 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center text-[10px] font-mono text-brand-warning">1</span>
+                <span>ENGAGE FORCED AIR VENTILATION</span>
               </div>
-              <p class="text-xs text-slate-400 pl-7 leading-relaxed">
-                Moisture is nearing danger zones. Activate forced ventilation sweeps inside storage stacks immediately to dissipate high latent relative humidity.
-              </p>
+              <p class="text-xs text-brand-muted pl-7 leading-relaxed">Marginal moisture thresholds reached. Engage electrical extraction fan sweeps immediately to clear out localized latent humidity buildup.</p>
             </div>
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-855 space-y-1">
-              <div class="flex items-center gap-2.5 font-bold text-slate-300 text-xs">
-                <span class="w-5 h-5 rounded-full bg-slate-850 border border-slate-700 flex items-center justify-center text-[10px] font-mono">2</span>
-                <span>PHYSICAL QUALITY SAMPLING SPREADS</span>
+            <div class="bg-brand-cream p-4 rounded-2xl border border-slate-200/60 space-y-1">
+              <div class="flex items-center gap-2 font-bold text-slate-700 text-xs">
+                <span class="w-5 h-5 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-[10px] font-mono text-slate-600">2</span>
+                <span>MANUAL VALIDATION EXTRACTION</span>
               </div>
-              <p class="text-xs text-slate-400 pl-7 leading-relaxed">
-                Extract physical kernel samples from depth 2 (0.7m) and depth 3 (1.3m). Verify moisture margins manually with calibrated baseline meters.
-              </p>
+              <p class="text-xs text-brand-muted pl-7 leading-relaxed">Extract physical kernel samples from depth 2 (0.7m) coordinates. Verify baseline moisture limits to confirm sensor calibration stability.</p>
             </div>
           `;
         } else {
           listHtml = `
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-850 space-y-1">
-              <div class="flex items-center gap-2.5 font-bold text-rose-400 text-xs">
-                <span class="w-5 h-5 rounded-full bg-red-950 border border-red-800 flex items-center justify-center text-[10px] font-mono">1</span>
-                <span>CRITICAL HOTSPOT WARNING - DE-STK & RE-DRY</span>
+            <div class="bg-brand-cream p-4 rounded-2xl border border-slate-200/60 space-y-1">
+              <div class="flex items-center gap-2 font-bold text-brand-danger text-xs">
+                <span class="w-5 h-5 rounded-full bg-red-100 border border-red-200 flex items-center justify-center text-[10px] font-mono text-brand-danger">1</span>
+                <span>ANOMALY WARNING: AIR SHIFT & RE-DRY REQUIRED</span>
               </div>
-              <p class="text-xs text-slate-400 pl-7 leading-relaxed">
-                Localized core biological activity is causing exponential heating. De-bag affected sections immediately. Spread the grain on concrete yards for open sun-drying to halt insect and fungal metabolism.
-              </p>
+              <p class="text-xs text-brand-muted pl-7 leading-relaxed">Fungal propagation limits have breached critical targets. Transport hot bag allocations back to open yard concrete surfaces to reduce biological respiration immediately.</p>
             </div>
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-855 space-y-1">
-              <div class="flex items-center gap-2.5 font-bold text-slate-300 text-xs">
-                <span class="w-5 h-5 rounded-full bg-slate-850 border border-slate-700 flex items-center justify-center text-[10px] font-mono">2</span>
-                <span>ISOLATE CONTAMINATED GRAIN RESERVES</span>
+            <div class="bg-brand-cream p-4 rounded-2xl border border-slate-200/60 space-y-1">
+              <div class="flex items-center gap-2 font-bold text-slate-700 text-xs">
+                <span class="w-5 h-5 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-[10px] font-mono text-slate-600">2</span>
+                <span>ISOLATE STACK GEOMETRY</span>
               </div>
-              <p class="text-xs text-slate-400 pl-7 leading-relaxed">
-                Separate high-temperature bags to prevent heat and insect infestation from spreading to neighboring clean grain piles.
-              </p>
+              <p class="text-xs text-brand-muted pl-7 leading-relaxed">Peak thermal profiles indicate anomalies are concentrated at depth 3 (${state.tempT3.toFixed(1)}°C). Isolate this pile sector block to safeguard surrounding clear zones.</p>
             </div>
           `;
         }
 
-        advisoryList.innerHTML = listHtml;
+        wrapper.innerHTML = listHtml;
       },
 
       updateAuditDatabasePage: function() {
-        const tableBody = document.getElementById('auditTableBody');
-        document.getElementById('auditTableCount').innerText = `${state.historyLog.length} RECORDS ARCHIVED`;
-
+        const body = document.getElementById('domAuditTableBody');
         let tableHtml = '';
+
         state.historyLog.forEach(log => {
-          let badgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-          if (log.status === 'WARNING') badgeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-          if (log.status === 'CRITICAL') badgeColor = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+          let badge = 'bg-emerald-500/10 text-brand-success border-emerald-500/20';
+          if (log.status === 'WARNING') badge = 'bg-amber-500/10 text-brand-warning border-amber-500/20';
+          if (log.status === 'CRITICAL') badge = 'bg-rose-500/10 text-brand-danger border-rose-500/20';
 
           tableHtml += `
-            <tr class="hover:bg-slate-850/50 transition">
-              <td class="py-4 px-6 text-slate-300 font-mono text-[11px]">${log.date}</td>
-              <td class="py-4 px-6 font-semibold text-white">${log.crop}</td>
+            <tr class="hover:bg-brand-cream/60 transition">
+              <td class="py-4 px-6 font-mono text-brand-muted text-[11px]">${log.date}</td>
+              <td class="py-4 px-6 font-bold text-brand-dark">${log.crop}</td>
               <td class="py-4 px-6">
-                <span class="bg-slate-950 text-slate-400 py-1 px-2.5 rounded border border-slate-800 font-mono text-[10px] uppercase font-bold">${log.mode}</span>
+                <span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200/60 font-mono text-[10px] font-bold uppercase">${log.mode}</span>
               </td>
-              <td class="py-4 px-6 text-slate-200 font-mono font-bold">${log.emc.toFixed(1)}%</td>
-              <td class="py-4 px-6 text-slate-200 font-mono">${log.tAvg.toFixed(1)}°C</td>
+              <td class="py-4 px-6 font-mono font-bold text-brand-dark">${log.emc.toFixed(1)}%</td>
+              <td class="py-4 px-6 font-mono text-brand-muted">${log.tAvg.toFixed(1)}°C</td>
               <td class="py-4 px-6">
-                <span class="${badgeColor} border px-3 py-1 rounded-full font-bold text-[9px] uppercase tracking-wider">${log.status}</span>
+                <span class="${badge} border px-3 py-1 rounded-full font-bold text-[9px] tracking-wider uppercase">${log.status}</span>
               </td>
             </tr>
           `;
         });
 
-        tableBody.innerHTML = tableHtml;
+        body.innerHTML = tableHtml || `<tr><td colspan="6" class="py-8 text-center text-brand-muted font-medium">No telemetry logs archived in current session database.</td></tr>`;
       },
 
-      plotSvgChart: function(latestEMC, latestT3) {
-        // Manage maximum elements inside plot pipelines
-        if (state.chartHistoryEMC.length > 20) {
+      appendChartTelemetryData: function(emc, t3) {
+        if (!liveChartInstance) return;
+        
+        // Push raw parameters to history pipeline arrays
+        if (state.chartHistoryEMC.length > 12) {
           state.chartHistoryEMC.shift();
           state.chartHistoryT3.shift();
         }
+        state.chartHistoryEMC.push(parseFloat(emc.toFixed(2)));
+        state.chartHistoryT3.push(parseFloat(t3.toFixed(2)));
 
-        state.chartHistoryEMC.push(latestEMC);
-        state.chartHistoryT3.push(latestT3);
+        // Synchronize display datasets structures
+        liveChartInstance.data.datasets[0].data = [...state.chartHistoryEMC];
+        liveChartInstance.data.datasets[1].data = [...state.chartHistoryT3];
+        liveChartInstance.update('none'); // Quick redraw without canvas animation lags
+      },
 
-        const buildSvgPathString = (dataList, minBound, maxBound) => {
-          const stepX = 100 / (dataList.length - 1);
-          let points = [];
+      initializeChartJSPipeline: function() {
+        const ctx = document.getElementById('canvasChartElement').getContext('2d');
+        
+        // Padding standard array points for index consistency
+        const dynamicLabels = Array.from({length: state.chartHistoryEMC.length}, (_, i) => `Node t-${state.chartHistoryEMC.length - 1 - i}`);
 
-          dataList.forEach((val, idx) => {
-            const x = idx * stepX;
-            // Map values dynamically between min/max coordinates
-            const normalizedY = 100 - (((val - minBound) / (maxBound - minBound)) * 100);
-            const clampedY = Math.max(0, Math.min(100, normalizedY));
-            points.push(`${x.toFixed(1)},${clampedY.toFixed(1)}`);
-          });
-
-          return points.length > 0 ? "M " + points.join(" L ") : "";
-        };
-
-        // Render line traces
-        document.getElementById('chartPathEMC').setAttribute('d', buildSvgPathString(state.chartHistoryEMC, 10, 20));
-        document.getElementById('chartPathT3').setAttribute('d', buildSvgPathString(state.chartHistoryT3, 15, 55));
+        liveChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: dynamicLabels,
+            datasets: [
+              {
+                label: 'Equilibrium Moisture (EMC %)',
+                data: [...state.chartHistoryEMC],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.04)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true,
+                yAxisID: 'yEMC'
+              },
+              {
+                label: 'Core Temperature (T3 °C)',
+                data: [...state.chartHistoryT3],
+                borderColor: '#3b82f6',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                tension: 0.3,
+                yAxisID: 'yTemp'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: { grid: { display: false }, ticks: { font: { size: 9 } } },
+              yEMC: {
+                type: 'linear',
+                position: 'left',
+                min: 8, max: 22,
+                ticks: { font: { size: 9 } },
+                grid: { color: 'rgba(0,0,0,0.03)' }
+              },
+              yTemp: {
+                type: 'linear',
+                position: 'right',
+                min: 10, max: 60,
+                ticks: { font: { size: 9 } },
+                grid: { display: false }
+              }
+            }
+          }
+        });
       }
     };
 
     // ============================================================================
-    // WORK NAVIGATION DECK DEPLOYER
+    // DASHBOARD TAB VIEW STATE MACHINE
     // ============================================================================
-    const nav = {
-      switchTab: function(tabName) {
-        state.currentScreen = tabName;
+    const dashboardNav = {
+      switchTab: function(tabId) {
+        state.currentTab = tabId;
         
-        // Reset tab visibilities
-        document.getElementById('tabViewOverview').classList.add('hidden');
-        document.getElementById('tabViewAdvisory').classList.add('hidden');
-        document.getElementById('tabViewAudit').classList.add('hidden');
+        // Hide views
+        document.getElementById('viewOverview').classList.add('hidden');
+        document.getElementById('viewAdvisory').classList.add('hidden');
+        document.getElementById('viewLogs').classList.add('hidden');
 
-        // Reset navigation button highlights
-        ['navBtnOverview', 'navBtnAdvisory', 'navBtnAudit'].forEach(id => {
-          document.getElementById(id).className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition";
+        // Clear active buttons styling rules
+        ['tabBtnOverview', 'tabBtnAdvisory', 'tabBtnLogs'].forEach(id => {
+          document.getElementById(id).className = "px-4 py-2 text-xs font-semibold text-brand-muted hover:text-brand-dark transition-all";
         });
 
-        // Set active view and navigation state
-        if (tabName === 'overview') {
-          document.getElementById('tabViewOverview').classList.remove('hidden');
-          document.getElementById('navBtnOverview').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-bold transition text-emerald-400 bg-slate-950 border border-slate-800";
+        // Toggle visibility frameworks
+        if (tabId === 'overview') {
+          document.getElementById('viewOverview').classList.remove('hidden');
+          document.getElementById('tabBtnOverview').className = "px-4 py-2 text-xs font-bold bg-white text-brand-dark rounded-lg shadow-sm border border-slate-200/40";
           ui.updateOverview();
-        } else if (tabName === 'advisory') {
-          document.getElementById('tabViewAdvisory').classList.remove('hidden');
-          document.getElementById('navBtnAdvisory').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-bold transition text-emerald-400 bg-slate-950 border border-slate-800";
+        } else if (tabId === 'advisory') {
+          document.getElementById('viewAdvisory').classList.remove('hidden');
+          document.getElementById('tabBtnAdvisory').className = "px-4 py-2 text-xs font-bold bg-white text-brand-dark rounded-lg shadow-sm border border-slate-200/40";
           ui.updateAdvisoryPage();
-        } else if (tabName === 'audit') {
-          document.getElementById('tabViewAudit').classList.remove('hidden');
-          document.getElementById('navBtnAudit').className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-bold transition text-emerald-400 bg-slate-950 border border-slate-800";
+        } else if (tabId === 'logs') {
+          document.getElementById('viewLogs').classList.remove('hidden');
+          document.getElementById('tabBtnLogs').className = "px-4 py-2 text-xs font-bold bg-white text-brand-dark rounded-lg shadow-sm border border-slate-200/40";
           ui.updateAuditDatabasePage();
         }
       }
     };
 
     // ============================================================================
-    // DYNAMIC GLOBAL TELEMETRY INTERACTION EVENT HANDLERS
+    // CONTROLLERS & DATA STREAM EVENT HOOKS
     // ============================================================================
-    function syncModeInterface() {
-      const btnDrying = document.getElementById('btnDryingMode');
-      const btnStorage = document.getElementById('btnStorageMode');
-      const panelStorage = document.getElementById('sandboxStorageSliders');
-      const panelDrying = document.getElementById('sandboxDryingSliders');
+    function syncHardwareInterfaceMode() {
+      const mode = state.isStorageMode;
+      const btnDry = document.getElementById('simBtnDrying');
+      const btnStore = document.getElementById('simBtnStorage');
+      const wrapStore = document.getElementById('simStorageSliders');
+      const wrapDry = document.getElementById('simDryingSliders');
 
-      if (state.isStorageMode) {
-        btnDrying.className = "px-2.5 py-0.5 rounded text-[10px] font-bold bg-slate-900 text-slate-400 hover:text-slate-200";
-        btnStorage.className = "px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-600 text-white";
-        panelStorage.classList.remove('hidden');
-        panelDrying.classList.add('hidden');
+      if (mode) {
+        btnDry.className = "py-2 text-xs font-semibold text-brand-muted hover:text-brand-dark transition-all";
+        btnStore.className = "py-2 text-xs font-bold bg-white text-brand-dark rounded-lg shadow-sm border border-slate-200/40";
+        wrapStore.classList.remove('hidden');
+        wrapDry.classList.add('hidden');
       } else {
-        btnDrying.className = "px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-600 text-white";
-        btnStorage.className = "px-2.5 py-0.5 rounded text-[10px] font-bold bg-slate-900 text-slate-400 hover:text-slate-200";
-        panelStorage.classList.add('hidden');
-        panelDrying.classList.remove('hidden');
+        btnDry.className = "py-2 text-xs font-bold bg-white text-brand-dark rounded-lg shadow-sm border border-slate-200/40";
+        btnStore.className = "py-2 text-xs font-semibold text-brand-muted hover:text-brand-dark transition-all";
+        wrapStore.classList.add('hidden');
+        wrapDry.classList.remove('hidden');
       }
 
-      updateTelemetryStatusFooter();
+      updateBroadcasterDebugPanel();
     }
 
-    function updateTelemetryStatusFooter() {
+    function updateBroadcasterDebugPanel() {
       const metrics = computeHealthMetrics();
-      const rawMode = state.isStorageMode ? "STORAGE" : "DRYING";
+      const rawPhase = state.isStorageMode ? "STORAGE" : "DRYING";
+      const payloadString = `${rawPhase}, T1:${state.tempT1.toFixed(1)}°C, T2:${state.tempT2.toFixed(1)}°C, T3:${state.tempT3.toFixed(1)}°C, EMC:${metrics.currentEMC.toFixed(1)}%`;
       
-      const debugString = `${rawMode}, T1:${state.tempT1.toFixed(1)}°C, T2:${state.tempT2.toFixed(1)}°C, T3:${state.tempT3.toFixed(1)}°C, EMC:${metrics.currentEMC.toFixed(1)}%`;
-      const telemetryEl = document.getElementById('telemetryStr');
-      if (telemetryStr) {
-        telemetryStr.innerText = debugString;
-      }
+      document.getElementById('txtDebugPayload').innerText = payloadString;
     }
 
     function commitStateToLogs() {
@@ -1038,119 +1100,90 @@
       };
 
       state.historyLog.unshift(newRecord);
-      nav.switchTab('audit');
+      localStorage.setItem("grainLogs_v2", JSON.stringify(state.historyLog));
+      
+      // Pivot focus view to audit page
+      dashboardNav.switchTab('logs');
+    }
+
+    function applyEnvironmentPreset(type) {
+      if (presetFungal) {
+        if (type === 'fungal') {
+          state.tempT1 = 28.0; state.tempT2 = 32.5; state.tempT3 = 45.0; state.interGranularHumidity = 78;
+          state.isStorageMode = true;
+
+          document.getElementById('inputT1').value = 28.0; document.getElementById('txtT1').innerText = "28.0°C";
+          document.getElementById('inputT2').value = 32.5; document.getElementById('txtT2').innerText = "32.5°C";
+          document.getElementById('inputT3').value = 45.0; document.getElementById('txtT3').innerText = "45.0°C";
+          document.getElementById('inputRH').value = 78; document.getElementById('txtRH').innerText = "78%";
+        } else if (type === 'ideal') {
+          state.tempT1 = 21.0; state.tempT2 = 21.5; state.tempT3 = 22.0; state.interGranularHumidity = 44;
+          state.isStorageMode = true;
+
+          document.getElementById('inputT1').value = 21.0; document.getElementById('txtT1').innerText = "21.0°C";
+          document.getElementById('inputT2').value = 21.5; document.getElementById('txtT2').innerText = "21.5°C";
+          document.getElementById('inputT3').value = 22.0; document.getElementById('txtT3').innerText = "22.0°C";
+          document.getElementById('inputRH').value = 44; document.getElementById('txtRH').innerText = "44%";
+        }
+        syncHardwareInterfaceMode();
+        ui.updateOverview();
+        if (state.currentTab === 'advisory') ui.updateAdvisoryPage();
+      }
     }
 
     // ============================================================================
-    // DOM LISTENER HOOKS
+    // DOM CONNECTIONS & ATTACHMENT HANDLERS
     // ============================================================================
     document.getElementById('cropSelect').addEventListener('change', (e) => {
       state.selectedCropIndex = parseInt(e.target.value);
-      
-      // Update sidebar specifications UI
       const crop = getActiveCrop();
+
+      // Synchronize side spec tables
       document.getElementById('sidebarCropName').innerText = crop.name;
       document.getElementById('sidebarSafeLimit').innerText = `EMC \u2264 ${crop.safeLimit}%`;
-      document.getElementById('sidebarConstants').innerText = `c1: ${crop.c1.toExponential(3)} | c3: ${crop.c3.toFixed(3)}`;
+      document.getElementById('sidebarConstants').innerText = `c1: ${crop.c1.toExponential(2)} | c3: ${crop.c3.toFixed(2)}`;
 
-      updateTelemetryStatusFooter();
+      updateBroadcasterDebugPanel();
       ui.updateOverview();
+      if (state.currentTab === 'advisory') ui.updateAdvisoryPage();
     });
 
-    document.getElementById('btnDryingMode').addEventListener('click', () => {
+    document.getElementById('simBtnDrying').addEventListener('click', () => {
       state.isStorageMode = false;
-      syncModeInterface();
+      syncHardwareInterfaceMode();
       ui.updateOverview();
+      if (state.currentTab === 'advisory') ui.updateAdvisoryPage();
     });
 
-    document.getElementById('btnStorageMode').addEventListener('click', () => {
+    document.getElementById('simBtnStorage').addEventListener('click', () => {
       state.isStorageMode = true;
-      syncModeInterface();
+      syncHardwareInterfaceMode();
       ui.updateOverview();
+      if (state.currentTab === 'advisory') ui.updateAdvisoryPage();
     });
 
-    // Slider listener setup function
-    function setupSandboxSlider(sliderId, valueLabelId, stateVar, unit = "°C") {
-      const slider = document.getElementById(sliderId);
-      slider.addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
-        state[stateVar] = val;
-        document.getElementById(valueLabelId).innerText = val + unit;
-        updateTelemetryStatusFooter();
+    function registerLiveSliderBinding(inputId, txtId, stateProperty, symbol = "°C") {
+      const el = document.getElementById(inputId);
+      el.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value);
+        state[stateProperty] = value;
+        document.getElementById(txtId).innerText = value + symbol;
+        
+        updateBroadcasterDebugPanel();
         ui.updateOverview();
+        if (state.currentTab === 'advisory') ui.updateAdvisoryPage();
       });
     }
 
-    setupSandboxSlider('sliderT1', 'sliderValT1', 'tempT1', '°C');
-    setupSandboxSlider('sliderT2', 'sliderValT2', 'tempT2', '°C');
-    setupSandboxSlider('sliderT3', 'sliderValT3', 'tempT3', '°C');
-    setupSandboxSlider('sliderRH', 'sliderValRH', 'interGranularHumidity', '%');
-    setupSandboxSlider('sliderAmbientTemp', 'sliderValAmbientTemp', 'ambientTemp', '°C');
-    setupSandboxSlider('sliderAmbientHumidity', 'sliderValAmbientHumidity', 'ambientHumidity', '%');
+    registerLiveSliderBinding('inputT1', 'txtT1', 'tempT1', '°C');
+    registerLiveSliderBinding('inputT2', 'txtT2', 'tempT2', '°C');
+    registerLiveSliderBinding('inputT3', 'txtT3', 'tempT3', '°C');
+    registerLiveSliderBinding('inputRH', 'txtRH', 'interGranularHumidity', '%');
+    registerLiveSliderBinding('inputAmbientTemp', 'txtAmbientTemp', 'ambientTemp', '°C');
+    registerLiveSliderBinding('inputAmbientHumidity', 'txtAmbientHumidity', 'ambientHumidity', '%');
 
-    // Scenario preset dispatcher
-    function applyPreset(presetType) {
-      if (presetType === 'fungal') {
-        state.tempT1 = 27.0;
-        state.tempT2 = 28.5;
-        state.tempT3 = 44.0;
-        state.interGranularHumidity = 75;
-        state.isStorageMode = true;
-
-        document.getElementById('sliderT1').value = 27.0;
-        document.getElementById('sliderValT1').innerText = "27.0°C";
-        document.getElementById('sliderT2').value = 28.5;
-        document.getElementById('sliderValT2').innerText = "28.5°C";
-        document.getElementById('sliderT3').value = 44.0;
-        document.getElementById('sliderValT3').innerText = "44.0°C";
-        document.getElementById('sliderRH').value = 75;
-        document.getElementById('sliderValRH').innerText = "75%";
-      } 
-      else if (presetType === 'ideal') {
-        state.tempT1 = 22.0;
-        state.tempT2 = 23.0;
-        state.tempT3 = 24.5;
-        state.interGranularHumidity = 45;
-        state.isStorageMode = true;
-
-        document.getElementById('sliderT1').value = 22.0;
-        document.getElementById('sliderValT1').innerText = "22.0°C";
-        document.getElementById('sliderT2').value = 23.0;
-        document.getElementById('sliderValT2').innerText = "23.0°C";
-        document.getElementById('sliderT3').value = 24.5;
-        document.getElementById('sliderValT3').innerText = "24.5°C";
-        document.getElementById('sliderRH').value = 45;
-        document.getElementById('sliderValRH').innerText = "45%";
-      } 
-      else if (presetType === 'sunDrying') {
-        state.ambientTemp = 36.5;
-        state.ambientHumidity = 35;
-        state.isStorageMode = false;
-
-        document.getElementById('sliderAmbientTemp').value = 36.5;
-        document.getElementById('sliderValAmbientTemp').innerText = "36.5°C";
-        document.getElementById('sliderAmbientHumidity').value = 35;
-        document.getElementById('sliderValAmbientHumidity').innerText = "35%";
-      }
-
-      syncModeInterface();
-      ui.updateOverview();
-    }
-
-    // Attach listeners dynamically to verify they are non-null elements
-    function attachElementListener(elementId, eventName, handlerFn) {
-      const el = document.getElementById(elementId);
-      if (el) {
-        el.addEventListener(eventName, handlerFn);
-      }
-    }
-
-    attachElementListener('presetFungal', 'click', () => applyPreset('fungal'));
-    attachElementListener('presetIdeal', 'click', () => applyPreset('ideal'));
-    attachElementListener('presetSunDrying', 'click', () => applyPreset('sunDrying'));
-
-    // Connect/Disconnect simulation button
-    attachElementListener('btnConnect', 'click', (e) => {
+    // Telemetry simulator toggle button hook
+    document.getElementById('btnConnect').addEventListener('click', (e) => {
       state.bleConnected = !state.bleConnected;
       const statusBox = document.getElementById('connectionStatus');
 
@@ -1174,18 +1207,18 @@
     });
 
     // ============================================================================
-    // SYSTEM ENTRY INITIALIZER
+    // BOOTSTRAP INIT LOOPS
     // ============================================================================
     window.onload = function() {
-      // Set active default parameters
-      const crop = getActiveCrop();
-      document.getElementById('sidebarCropName').innerText = crop.name;
-      document.getElementById('sidebarSafeLimit').innerText = `EMC \u2264 ${crop.safeLimit}%`;
-      document.getElementById('sidebarConstants').innerText = `c1: ${crop.c1.toExponential(3)} | c3: ${crop.c3.toFixed(3)}`;
-
-      syncModeInterface();
-      ui.updateOverview();
+      loadPersistedHistoryLogs();
+      ui.initializeChartJSPipeline();
+      
+      // Trigger base interfaces configurations syncs
+      dashboardNav.switchTab('overview');
+      syncHardwareInterfaceMode();
     };
   </script>
 </body>
 </html>
+
+
