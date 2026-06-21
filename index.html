@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrainGuardian - Live Interactive System Simulation</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            emerald: {
+              950: '#022c22',
+              900: '#064e3b',
+              800: '#065f46',
+              600: '#059669',
+              500: '#10b981',
+              400: '#34d399',
+              200: '#a7f3d0',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React & Babel CDNs -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Google Fonts for crisp typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Hide scrollbars for slick mobile look */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #020617;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body class="h-full text-slate-100 flex flex-col overflow-x-hidden">
+
+  <!-- React Root Insertion Point -->
+  <div id="root" class="flex-1 flex flex-col md:flex-row min-h-screen"></div>
+
+  <!-- React Application Core Logic -->
+  <script type="text/babel">
+    /** @jsxRuntime classic */
+    /** @jsx React.createElement */
+    const { useState, useEffect } = React;
+
+    // ============================================================================
+    // EMBEDDED HIGH-QUALITY SVG ICONS (Removes all external library dependencies)
+    // ============================================================================
+    const Icons = {
+      Sun: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m0 13.5V21M4.22 4.22l1.58 1.58m12.42 12.42l1.58 1.58M3 12h2.25m13.5 0H21M4.22 19.78l1.58-1.58M17.62 5.63l1.58-1.58M12 7.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z" /></svg>
+      ),
+      Droplets: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15a8.25 8.25 0 0 1 14.503-5.53 11.96 11.96 0 0 0-4.183 1.258 11.998 11.998 0 0 0-7.83 5.727H2.25Zm0 0A8.25 8.25 0 0 0 13.5 22.5H15a8.25 8.25 0 0 0 8.25-8.25V13.5a9 9 0 0 0-9-9H13.5a9 9 0 0 0-9 9V15Z" /></svg>
+      ),
+      Database: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V10.125m16.5 0v3.75m-16.5-3.75v3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125v-3.75" /></svg>
+      ),
+      Activity: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>
+      ),
+      Bluetooth: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.656 48.656 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7C4.547 9.547 4.5 10.768 4.5 12s.047 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.092-1.209.138-2.43.138-3.662Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M9 9.75V12m0 0v2.25m0-2.25h6" /></svg>
+      ),
+      User: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+      ),
+      ShieldCheck: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /></svg>
+      ),
+      ShieldAlert: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" /></svg>
+      ),
+      AlertTriangle: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.008v.008H12v-.008Z" /></svg>
+      ),
+      History: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+      ),
+      ChevronLeft: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+      ),
+      ChevronRight: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+      ),
+      Info: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 1 1 1.063 1.06l-3 3a.75.75 0 1 1-1.06-1.06l3-3ZM12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 7.5a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
+      ),
+      CheckCircle: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+      ),
+      Sparkles: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 21L8.188 15.904L3 15L8.188 14.096L9 9L9.813 14.096L15 15L9.813 15.904ZM18.25 5.25L17.5 9L16.75 5.25L13 4.5L16.75 3.75L17.5 0L18.25 3.75L22 4.5L18.25 5.25Z" /></svg>
+      )
+    };
+
+    // ============================================================================
+    // CROPS DATABASE WITH THE THERMODYNAMIC EMPIRICAL CONSTANTS
+    // ============================================================================
+    const CROP_DATABASE = [
+      { id: 0, name: "Paddy (Rice)", c1: 1.9187e-5, c2: 51.161, c3: 2.4484, safeLimit: 13.5 },
+      { id: 1, name: "Wheat", c1: 2.3007e-5, c2: 35.853, c3: 2.2857, safeLimit: 13.0 },
+      { id: 2, name: "Maize (Corn)", c1: 8.6541e-5, c2: 49.810, c3: 1.8634, safeLimit: 13.5 }
+    ];
+
+    function App() {
+      // ============================================================================
+      // GLOBAL MOBILE APP STATES
+      // ============================================================================
+      const [currentScreen, setCurrentScreen] = useState('splash'); // splash, home, drying, storage, risk, recs, history, profile
+      const [selectedCropIndex, setSelectedCropIndex] = useState(0);
+      const [bleConnected, setBleConnected] = useState(true);
+      const [farmerName, setFarmerName] = useState("Rajesh Kumar");
+      const [language, setLanguage] = useState("English");
+      const [historyLog, setHistoryLog] = useState([
+        { id: 1, date: "2026-06-05 14:20", crop: "Paddy", mode: "Storage", score: 92, status: "SAFE", emc: 12.8, tAvg: 29.2 },
+        { id: 2, date: "2026-06-03 10:15", crop: "Paddy", mode: "Drying", score: 45, status: "WARNING", emc: 15.2, tAvg: 32.4 },
+        { id: 3, date: "2026-05-28 09:00", crop: "Wheat", mode: "Storage", score: 96, status: "SAFE", emc: 12.1, tAvg: 26.8 },
+        { id: 4, date: "2026-05-15 16:40", crop: "Paddy", mode: "Storage", score: 32, status: "CRITICAL", emc: 16.4, tAvg: 41.5 }
+      ]);
+
+      // ============================================================================
+      // INTERACTIVE SIMULATOR STATE
+      // ============================================================================
+      const [isStorageMode, setIsStorageMode] = useState(true);
+      const [tempT1, setTempT1] = useState(28.5); // Top Layer (0.2m)
+      const [tempT2, setTempT2] = useState(29.1); // Middle Layer (0.7m)
+      const [tempT3, setTempT3] = useState(29.8); // Bottom Layer (1.3m)
+      const [interGranularHumidity, setInterGranularHumidity] = useState(58.0);
+      const [ambientTemp, setAmbientTemp] = useState(30.0);
+      const [ambientHumidity, setAmbientHumidity] = useState(62.0);
+
+      // Auto transition for splash screen
+      useEffect(() => {
+        if (currentScreen === 'splash') {
+          const timer = setTimeout(() => {
+            setCurrentScreen('home');
+          }, 3000);
+          return () => clearTimeout(timer);
+        }
+      }, [currentScreen]);
+
+      const activeCrop = CROP_DATABASE[selectedCropIndex];
+
+      // Henderson-Thompson EMC Engine
+      const calculateEMC = (temp, rh, crop) => {
+        const rhDecimal = Math.max(0.1, Math.min(99.9, rh)) / 100.0;
+        const term1 = -Math.log(1.0 - rhDecimal);
+        const term2 = crop.c1 * (temp + crop.c2);
+        if (term2 <= 0) return 0;
+        return Math.pow(term1 / term2, 1.0 / crop.c3) * 100;
+      };
+
+      const currentEMC = isStorageMode 
+        ? calculateEMC(tempT3, interGranularHumidity, activeCrop) 
+        : calculateEMC(ambientTemp, ambientHumidity, activeCrop);
+
+      // Comprehensive Grain Health Score Calculator
+      const computeHealthMetrics = () => {
+        let score = 100;
+        let reasons = [];
+
+        // 1. Moisture Overshoot Risk
+        const moistureGap = currentEMC - activeCrop.safeLimit;
+        if (moistureGap > 0) {
+          const deduction = Math.round(moistureGap * 15);
+          score -= deduction;
+          reasons.push(`Moisture content is ${currentEMC.toFixed(1)}%, which is above the safe limit of ${activeCrop.safeLimit}%`);
+        }
+
+        // 2. Spatial Hotspot Heat Gradients (Fourier differential warning)
+        const maxDiff = Math.max(
+          Math.abs(tempT1 - tempT2),
+          Math.abs(tempT2 - tempT3),
+          Math.abs(tempT1 - tempT3)
+        );
+        if (maxDiff > 4.0) {
+          score -= 25;
+          reasons.push(`High internal temperature gradient detected (ΔT = ${maxDiff.toFixed(1)}°C) inside the grain mass`);
+        }
+
+        // 3. Absolute Biological Respiration Indicators
+        const absoluteMax = Math.max(tempT1, tempT2, tempT3);
+        if (absoluteMax > 38.0) {
+          score -= 30;
+          reasons.push(`Core localized temperatures have reached dangerous levels (${absoluteMax.toFixed(1)}°C)`);
+        }
+
+        score = Math.max(0, Math.min(100, score));
+
+        let status = "SAFE";
+        if (score < 60) status = "CRITICAL";
+        else if (score < 85) status = "WARNING";
+
+        return { score, status, reasons, maxDiff };
+      };
+
+      const { score: currentHealthScore, status: currentStatus, reasons: riskReasons, maxDiff: tempGradient } = computeHealthMetrics();
+
+      const saveCurrentInspection = () => {
+        const newLog = {
+          id: Date.now(),
+          date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          crop: activeCrop.name,
+          mode: isStorageMode ? "Storage" : "Drying",
+          score: currentHealthScore,
+          status: currentStatus,
+          emc: parseFloat(currentEMC.toFixed(1)),
+          tAvg: parseFloat(((tempT1 + tempT2 + tempT3) / 3).toFixed(1))
+        };
+        setHistoryLog([newLog, ...historyLog]);
+        setCurrentScreen('history');
+      };
+
+      return (
+        <div className="flex-1 flex flex-col md:flex-row min-h-screen">
+          
+          {/* ============================================================================
+              LEFT PANEL: SANDBOX HARDWARE SIMULATOR
+              ============================================================================ */}
+          <div className="w-full md:w-5/12 bg-slate-950 p-6 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col justify-between shrink-0">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="p-1.5 bg-emerald-950 text-emerald-400 rounded-lg border border-emerald-800/50">
+                  <Icons.Activity />
+                </span>
+                <div>
+                  <h2 className="text-sm font-semibold tracking-wide uppercase text-emerald-400">EPICS Virtual Sandbox</h2>
+                  <h1 className="text-lg font-bold text-slate-100">Hardware Telemetry Panel</h1>
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+                Manipulate physical constants, ambient temperatures, boundary layer conditions, and crop types. See how the Android/iOS app updates its risk assessment engine instantly.
+              </p>
+
+              {/* Core Settings Selector */}
+              <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 mb-4 space-y-4 text-left">
+                <div>
+                  <label className="text-xs text-slate-400 font-semibold block mb-1.5 uppercase">Select Target Crop</label>
+                  <select 
+                    value={selectedCropIndex} 
+                    onChange={(e) => setSelectedCropIndex(parseInt(e.target.value))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 px-3 text-sm text-emerald-400 focus:outline-none focus:border-emerald-500"
+                  >
+                    {CROP_DATABASE.map((c, i) => (
+                      <option key={c.id} value={i}>{c.name} (Safe Limit: {c.safeLimit}%)</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs text-slate-400 font-semibold block mb-1.5 uppercase">Active Hardware Mode</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setIsStorageMode(false)}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${!isStorageMode ? 'bg-emerald-600 text-white' : 'bg-slate-950 text-slate-400 hover:text-slate-200'}`}
+                    >
+                      <Icons.Sun />
+                      Drying Canopy
+                    </button>
+                    <button
+                      onClick={() => setIsStorageMode(true)}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${isStorageMode ? 'bg-emerald-600 text-white' : 'bg-slate-950 text-slate-400 hover:text-slate-200'}`}
+                    >
+                      <Icons.Database />
+                      Storage Probe
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Environmental Conditions */}
+              <div className="space-y-4 text-left">
+                <h3 className="text-xs text-slate-500 uppercase font-bold tracking-wider">Physical Variables</h3>
+                
+                {isStorageMode ? (
+                  <div className="space-y-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800/80">
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-slate-300">T1 (Top Layer 0.2m)</span>
+                        <span className="text-emerald-400 font-mono">{tempT1}°C</span>
+                      </div>
+                      <input 
+                        type="range" min="15" max="55" step="0.5" value={tempT1} 
+                        onChange={(e) => setTempT1(parseFloat(e.target.value))}
+                        className="w-full accent-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-slate-300">T2 (Middle Layer 0.7m)</span>
+                        <span className="text-emerald-400 font-mono">{tempT2}°C</span>
+                      </div>
+                      <input 
+                        type="range" min="15" max="55" step="0.5" value={tempT2} 
+                        onChange={(e) => setTempT2(parseFloat(e.target.value))}
+                        className="w-full accent-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-slate-300">T3 (Bottom Layer 1.3m)</span>
+                        <span className="text-emerald-400 font-mono">{tempT3}°C</span>
+                      </div>
+                      <input 
+                        type="range" min="15" max="55" step="0.5" value={tempT3} 
+                        onChange={(e) => setTempT3(parseFloat(e.target.value))}
+                        className="w-full accent-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-slate-300">Probe Tip Relative Humidity</span>
+                        <span className="text-emerald-400 font-mono">{interGranularHumidity}%</span>
+                      </div>
+                      <input 
+                        type="range" min="20" max="95" step="1" value={interGranularHumidity} 
+                        onChange={(e) => setInterGranularHumidity(parseFloat(e.target.value))}
+                        className="w-full accent-emerald-500"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800/80">
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-slate-300">Drying Ambient Temp</span>
+                        <span className="text-emerald-400 font-mono">{ambientTemp}°C</span>
+                      </div>
+                      <input 
+                        type="range" min="15" max="50" step="0.5" value={ambientTemp} 
+                        onChange={(e) => setAmbientTemp(parseFloat(e.target.value))}
+                        className="w-full accent-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-slate-300">Drying Yard Relative Humidity</span>
+                        <span className="text-emerald-400 font-mono">{ambientHumidity}%</span>
+                      </div>
+                      <input 
+                        type="range" min="20" max="95" step="1" value={ambientHumidity} 
+                        onChange={(e) => setAmbientHumidity(parseFloat(e.target.value))}
+                        className="w-full accent-emerald-500"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Hotspot Presets */}
+              <div className="mt-6 space-y-2 text-left">
+                <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">Simulation Scenarios</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button 
+                    onClick={() => {
+                      setTempT1(27.0); setTempT2(27.5); setTempT3(44.0);
+                      setInterGranularHumidity(75); setIsStorageMode(true);
+                    }}
+                    className="bg-slate-900 hover:bg-slate-850 text-xs text-left p-2.5 rounded-lg border border-slate-800 flex flex-col transition text-slate-300"
+                  >
+                    <span className="text-red-400 font-bold">Fungal Hotspot</span>
+                    <span className="text-[10px] text-slate-400">High temp spike at depth 3</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setTempT1(25.5); setTempT2(26.0); setTempT3(26.2);
+                      setInterGranularHumidity(48); setIsStorageMode(true);
+                    }}
+                    className="bg-slate-900 hover:bg-slate-850 text-xs text-left p-2.5 rounded-lg border border-slate-800 flex flex-col transition text-slate-300"
+                  >
+                    <span className="text-emerald-400 font-bold">Ideal Storage</span>
+                    <span className="text-[10px] text-slate-400">Low humidity, cold core</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setAmbientTemp(35); setAmbientHumidity(40); setIsStorageMode(false);
+                    }}
+                    className="bg-slate-900 hover:bg-slate-850 text-xs text-left p-2.5 rounded-lg border border-slate-800 flex flex-col transition text-slate-300"
+                  >
+                    <span className="text-amber-400 font-bold">Sun Drying Yard</span>
+                    <span className="text-[10px] text-slate-400">Optimum dry canopy</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setAmbientTemp(24); setAmbientHumidity(82); setIsStorageMode(false);
+                    }}
+                    className="bg-slate-900 hover:bg-slate-850 text-xs text-left p-2.5 rounded-lg border border-slate-800 flex flex-col transition text-slate-300"
+                  >
+                    <span className="text-indigo-400 font-bold">High Humidity</span>
+                    <span className="text-[10px] text-slate-400">Rainy/cloudy moisture trap</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Telemetry Footer */}
+            <div className="mt-6 p-3 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-left">
+              <div className="flex items-center gap-2">
+                <span className={`w-4 h-4 ${bleConnected ? 'text-blue-400 animate-pulse' : 'text-slate-500'}`}>
+                  <Icons.Bluetooth />
+                </span>
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase font-bold">BLE Broadcast Telemetry</div>
+                  <div className="text-xs font-mono text-emerald-400 font-bold">
+                    {isStorageMode ? "STORAGE" : "DRYING"}, {tempT1.toFixed(0)}, {tempT2.toFixed(0)}, {tempT3.toFixed(0)}, {currentEMC.toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+              <button 
+                onClick={() => setBleConnected(!bleConnected)}
+                className={`px-2 py-1 rounded text-[10px] font-bold ${bleConnected ? 'bg-blue-950/80 border border-blue-900 text-blue-300' : 'bg-slate-800 text-slate-300'}`}
+              >
+                {bleConnected ? "DISCONNECT" : "CONNECT"}
+              </button>
+            </div>
+          </div>
+
+          {/* ============================================================================
+              RIGHT PANEL: EMULATED COMPANION MOBILE APP
+              ============================================================================ */}
+          <div className="flex-1 bg-slate-900 flex justify-center items-center p-4 lg:p-8">
+            <div className="w-full max-w-[390px] h-[760px] bg-slate-950 rounded-[48px] border-[10px] border-slate-800 flex flex-col overflow-hidden relative shadow-2xl shadow-emerald-950/20">
+              
+              {/* Device Notch & Status Bar */}
+              <div className="h-7 bg-slate-950 px-6 flex justify-between items-center text-[10px] text-slate-400 font-semibold border-b border-slate-900 shrink-0 select-none">
+                <span>11:06 PM</span>
+                <div className="w-16 h-3 bg-slate-900 rounded-full border border-slate-800/80 flex items-center justify-center">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-1"></div>
+                  <span className="text-[8px] text-slate-400 font-bold">GG_PROBE</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className={`${bleConnected ? 'text-blue-400' : 'text-slate-600'}`}>
+                    <Icons.Bluetooth />
+                  </span>
+                  <span className="text-emerald-500">
+                    <Icons.Droplets />
+                  </span>
+                  <div className="w-4 h-2 border border-slate-500 rounded-sm flex items-center p-0.5">
+                    <div className="w-2.5 h-full bg-emerald-400 rounded-2xs"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SCREEN 1: SPLASH SCREEN */}
+              {currentScreen === 'splash' && (
+                <div className="flex-1 flex flex-col justify-between p-8 bg-gradient-to-b from-slate-950 to-emerald-950/30 text-center select-none">
+                  <div></div>
+                  <div className="space-y-6 flex flex-col items-center">
+                    <div className="relative inline-flex items-center justify-center p-6 bg-emerald-950/50 rounded-full border border-emerald-500/30 shadow-lg">
+                      <span className="text-emerald-400 animate-bounce"><Icons.Droplets /></span>
+                    </div>
+                    <div className="space-y-2">
+                      <h1 className="text-3xl font-extrabold tracking-tight text-white">GrainGuardian</h1>
+                      <p className="text-xs text-emerald-400 font-semibold uppercase tracking-widest">Post-Harvest Security Platform</p>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.3s]"></div>
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.15s]"></div>
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce"></div>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-medium tracking-wide">UNIVERSITY EPICS PROJECT • TIER-1 INITIATIVE</p>
+                  </div>
+                </div>
+              )}
+
+              {/* MOBILE APP HEADER */}
+              {currentScreen !== 'splash' && (
+                <div className="bg-slate-950 px-5 py-4 border-b border-slate-900 flex justify-between items-center shrink-0">
+                  <div className="flex items-center gap-2 text-left">
+                    {currentScreen !== 'home' && (
+                      <button 
+                        onClick={() => setCurrentScreen('home')}
+                        className="p-1 hover:bg-slate-900 rounded-lg text-slate-400 transition"
+                      >
+                        <Icons.ChevronLeft />
+                      </button>
+                    )}
+                    <div>
+                      <h1 className="text-sm font-bold text-white tracking-wide">
+                        {currentScreen === 'home' && "GrainGuardian"}
+                        {currentScreen === 'drying' && "Drying Assessment"}
+                        {currentScreen === 'storage' && "Storage Inspection"}
+                        {currentScreen === 'risk' && "Risk Diagnostics"}
+                        {currentScreen === 'recs' && "Action Plans"}
+                        {currentScreen === 'history' && "Device Logs"}
+                        {currentScreen === 'profile' && "Profile Settings"}
+                      </h1>
+                      <p className="text-[10px] text-slate-500 font-semibold tracking-wider uppercase">
+                        {currentScreen === 'home' && "FARM MONITOR"}
+                        {currentScreen !== 'home' && activeCrop.name}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => setCurrentScreen('profile')}
+                    className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg border border-slate-800 transition"
+                  >
+                    <Icons.User />
+                  </button>
+                </div>
+              )}
+
+              {/* MOBILE SCREENS CONTAINER */}
+              {currentScreen !== 'splash' && (
+                <div className="flex-1 overflow-y-auto bg-slate-950 px-4 py-5 space-y-5 custom-scrollbar">
+
+                  {!bleConnected && (
+                    <div className="bg-red-950/80 border border-red-900/60 p-3 rounded-xl flex items-center gap-2.5 text-red-200 text-xs text-left shadow-lg">
+                      <span className="text-red-400 shrink-0 mt-0.5"><Icons.ShieldAlert /></span>
+                      <p className="leading-normal">
+                        <strong>Connection Lost!</strong> BLE probe disconnected. Verify device power.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* SCREEN 2: HOME DASHBOARD */}
+                  {currentScreen === 'home' && (
+                    <React.Fragment>
+                      <div className="bg-gradient-to-b from-slate-900 to-slate-950 p-5 rounded-2xl border border-slate-800/80 flex flex-col items-center relative text-center shadow-lg">
+                        <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-3">Overall Grain Health</span>
+                        
+                        <div className="relative w-36 h-36 flex items-center justify-center">
+                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="42" stroke="#1e293b" strokeWidth="6" fill="transparent" />
+                            <circle 
+                              cx="50" cy="50" r="42" 
+                              stroke={currentStatus === 'SAFE' ? '#10b981' : currentStatus === 'WARNING' ? '#f59e0b' : '#ef4444'} 
+                              strokeWidth="7" 
+                              fill="transparent" 
+                              strokeDasharray={263.8} 
+                              strokeDashoffset={263.8 - (263.8 * currentHealthScore) / 100}
+                              className="transition-all duration-1000 ease-out"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-4xl font-extrabold text-white tracking-tighter">{currentHealthScore}</span>
+                            <span className="text-[9px] text-slate-400 uppercase font-semibold">Quality Score</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex items-center gap-1.5">
+                          {currentStatus === 'SAFE' && (
+                            <span className="bg-emerald-950/80 text-emerald-400 border border-emerald-900 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider flex items-center gap-1">
+                              <Icons.ShieldCheck /> GRAIN IS SAFE
+                            </span>
+                          )}
+                          {currentStatus === 'WARNING' && (
+                            <span className="bg-amber-950/80 text-amber-400 border border-amber-900 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider flex items-center gap-1">
+                              <Icons.AlertTriangle /> CRITICAL CAUTION
+                            </span>
+                          )}
+                          {currentStatus === 'CRITICAL' && (
+                            <span className="bg-red-950/80 text-red-400 border border-red-900 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider flex items-center gap-1">
+                              <Icons.ShieldAlert /> HIGH LOSS RISK
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 flex items-center justify-between text-left">
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Active Device Mode</span>
+                          <h4 className="text-sm font-bold text-slate-200">
+                            {isStorageMode ? "🏚️ Active Storage Probe" : "🌞 Drying Canopy"}
+                          </h4>
+                        </div>
+                        <button 
+                          onClick={() => setIsStorageMode(!isStorageMode)}
+                          className="px-2.5 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-semibold text-emerald-400 transition"
+                        >
+                          SWITCH
+                        </button>
+                      </div>
+
+                      <div className="space-y-3 text-left">
+                        <span className="text-xs text-slate-500 uppercase font-bold tracking-wider block">Operational Dashboards</span>
+                        
+                        <button 
+                          onClick={() => { setCurrentScreen('drying'); setIsStorageMode(false); }}
+                          className="w-full bg-slate-900 hover:bg-slate-850 p-4 rounded-xl border border-slate-800 flex justify-between items-center transition text-left group text-slate-300"
+                        >
+                          <div className="flex gap-3">
+                            <span className="p-2.5 bg-amber-950/60 border border-amber-900/50 text-amber-400 rounded-xl group-hover:scale-105 transition shrink-0">
+                              <Icons.Sun />
+                            </span>
+                            <div>
+                              <h3 className="text-sm font-bold text-white">Drying Yard Assessment</h3>
+                              <p className="text-xs text-slate-400">Calculate safe moisture storage levels</p>
+                            </div>
+                          </div>
+                          <span className="text-slate-500"><Icons.ChevronRight /></span>
+                        </button>
+
+                        <button 
+                          onClick={() => { setCurrentScreen('storage'); setIsStorageMode(true); }}
+                          className="w-full bg-slate-900 hover:bg-slate-850 p-4 rounded-xl border border-slate-800 flex justify-between items-center transition text-left group text-slate-300"
+                        >
+                          <div className="flex gap-3">
+                            <span className="p-2.5 bg-emerald-950/60 border border-emerald-900/50 text-emerald-400 rounded-xl group-hover:scale-105 transition shrink-0">
+                              <Icons.Database />
+                            </span>
+                            <div>
+                              <h3 className="text-sm font-bold text-white">Storage Health Inspection</h3>
+                              <p className="text-xs text-slate-400">Track multi-depth heat & biological activity</p>
+                            </div>
+                          </div>
+                          <span className="text-slate-500"><Icons.ChevronRight /></span>
+                        </button>
+                      </div>
+
+                      {currentStatus !== 'SAFE' && (
+                        <div className={`p-4 rounded-xl border border-dashed flex justify-between items-center text-left ${currentStatus === 'CRITICAL' ? 'bg-red-950/20 border-red-900 text-red-200' : 'bg-amber-950/20 border-amber-900 text-amber-200'}`}>
+                          <div className="space-y-1">
+                            <h4 className="text-xs font-bold uppercase tracking-wider">Active Alarms</h4>
+                            <p className="text-xs text-slate-300 line-clamp-1">{riskReasons[0] || "Warning state detected."}</p>
+                          </div>
+                          <button 
+                            onClick={() => setCurrentScreen('risk')}
+                            className="text-xs font-bold flex items-center gap-1 hover:underline shrink-0 font-mono"
+                          >
+                            DIAGNOSE
+                          </button>
+                        </div>
+                      )}
+                    </React.Fragment>
+                  )}
+
+                  {/* SCREEN 3: DRYING ASSESSMENT */}
+                  {currentScreen === 'drying' && (
+                    <React.Fragment>
+                      <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center space-y-4">
+                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Theoretical Moisture (EMC)</span>
+                        <div className="space-y-1">
+                          <h2 className="text-5xl font-extrabold text-white tracking-tighter">
+                            {currentEMC.toFixed(1)}%
+                          </h2>
+                          <p className="text-xs text-slate-400">Estimated Equilibrium Moisture Content</p>
+                        </div>
+
+                        <div className="bg-slate-950 border border-slate-800/80 p-3.5 rounded-xl flex items-center justify-between text-left">
+                          <div className="space-y-0.5">
+                            <span className="text-[10px] text-slate-500 uppercase font-bold">Target Safelimit</span>
+                            <h4 className="text-sm font-bold text-emerald-400">{activeCrop.safeLimit}% or Lower</h4>
+                          </div>
+                          <div className="text-right space-y-0.5">
+                            <span className="text-[10px] text-slate-500 uppercase font-bold">Storage Readiness</span>
+                            <h4 className={`text-sm font-bold ${currentEMC <= activeCrop.safeLimit ? 'text-emerald-400' : 'text-amber-400'}`}>
+                              {currentEMC <= activeCrop.safeLimit ? "READY" : "DRY MORE"}
+                            </h4>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-left">
+                        <div className="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                          <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Ambient Temp</span>
+                          <span className="text-lg font-bold font-mono text-slate-200">{ambientTemp}°C</span>
+                        </div>
+                        <div className="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                          <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Boundary Humidity</span>
+                          <span className="text-lg font-bold font-mono text-slate-200">{ambientHumidity}%</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-950 border border-slate-900 p-4 rounded-xl space-y-2 text-xs text-left">
+                        <div className="flex items-center gap-1.5 text-slate-200 font-bold">
+                          <span className="text-emerald-500"><Icons.Info /></span>
+                          <span>Mathematical Insights</span>
+                        </div>
+                        <p className="text-slate-400 leading-normal">
+                          Based on the <strong>Modified Henderson-Thompson Equation</strong>, ambient relative humidity has a direct correlation with the theoretical minimum moisture grain can achieve. If ambient humidity remains high, over-drying or under-drying risks can trigger insect respiration or localized biological heat generation.
+                        </p>
+                      </div>
+
+                      <div className="pt-2 space-y-2">
+                        <button 
+                          onClick={saveCurrentInspection}
+                          className="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl text-xs font-bold text-white transition flex items-center justify-center gap-2"
+                        >
+                          <Icons.CheckCircle /> Save Local Assessment Record
+                        </button>
+                        <button 
+                          onClick={() => setCurrentScreen('recs')}
+                          className="w-full bg-slate-900 hover:bg-slate-800 py-3 rounded-xl text-xs font-bold text-slate-300 transition"
+                        >
+                          View Comprehensive Advisory Options
+                        </button>
+                      </div>
+                    </React.Fragment>
+                  )}
+
+                  {/* SCREEN 4: STORAGE HEALTH INSPECTION */}
+                  {currentScreen === 'storage' && (
+                    <React.Fragment>
+                      <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-5 text-left">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Multi-depth Sensor Probe</span>
+                          <span className="text-[10px] bg-emerald-950 border border-emerald-900 text-emerald-400 py-1 px-2.5 rounded-full font-bold font-mono">
+                            1.5M PROBE HEIGHT
+                          </span>
+                        </div>
+
+                        <div className="flex gap-4">
+                          <div className="w-6 bg-slate-950 rounded-full relative flex flex-col justify-between py-6 items-center border border-slate-800 shrink-0">
+                            <div className="absolute w-1 bg-emerald-800/40 h-[85%] top-1/2 -translate-y-1/2"></div>
+                            <div className={`w-3.5 h-3.5 rounded-full border-2 border-slate-950 z-10 transition-colors duration-500 ${tempT1 > 38 ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
+                            <div className={`w-3.5 h-3.5 rounded-full border-2 border-slate-950 z-10 transition-colors duration-500 ${tempT2 > 38 ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
+                            <div className={`w-3.5 h-3.5 rounded-full border-2 border-slate-950 z-10 transition-colors duration-500 ${tempT3 > 38 ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
+                          </div>
+
+                          <div className="flex-1 flex flex-col justify-between py-1 space-y-4">
+                            <div className="bg-slate-950 border border-slate-850 p-2.5 rounded-xl flex justify-between items-center">
+                              <div className="text-left">
+                                <h5 className="text-[10px] text-slate-500 font-bold uppercase">Top Depth (0.2m)</h5>
+                                <p className="text-xs text-slate-400">Surface layer convection</p>
+                              </div>
+                              <span className={`text-sm font-mono font-bold ${tempT1 > 38 ? 'text-red-400' : 'text-slate-100'}`}>{tempT1.toFixed(1)}°C</span>
+                            </div>
+
+                            <div className="bg-slate-950 border border-slate-850 p-2.5 rounded-xl flex justify-between items-center">
+                              <div className="text-left">
+                                <h5 className="text-[10px] text-slate-500 font-bold uppercase">Middle Depth (0.7m)</h5>
+                                <p className="text-xs text-slate-400">Conduction thermal barrier</p>
+                              </div>
+                              <span className={`text-sm font-mono font-bold ${tempT2 > 38 ? 'text-red-400' : 'text-slate-100'}`}>{tempT2.toFixed(1)}°C</span>
+                            </div>
+
+                            <div className="bg-slate-950 border border-slate-850 p-2.5 rounded-xl flex justify-between items-center">
+                              <div className="text-left">
+                                <h5 className="text-[10px] text-slate-500 font-bold uppercase">Core Depth (1.3m)</h5>
+                                <p className="text-xs text-slate-400">Moisture pocket hot core</p>
+                              </div>
+                              <span className={`text-sm font-mono font-bold ${tempT3 > 38 ? 'text-red-400' : 'text-slate-100'}`}>{tempT3.toFixed(1)}°C</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-left">
+                        <div className="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                          <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Probe Inter-Moisture</span>
+                          <span className="text-lg font-bold font-mono text-slate-200">{currentEMC.toFixed(1)}%</span>
+                        </div>
+                        <div className="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                          <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Thermal Gradient ΔT</span>
+                          <span className="text-lg font-bold font-mono text-slate-200">{tempGradient.toFixed(1)}°C</span>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 space-y-2">
+                        <button 
+                          onClick={() => setCurrentScreen('risk')}
+                          className="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl text-xs font-bold text-white transition flex items-center justify-center gap-2"
+                        >
+                          <Icons.Activity /> Run Spoilage Diagnosis
+                        </button>
+                        <button 
+                          onClick={saveCurrentInspection}
+                          className="w-full bg-slate-900 hover:bg-slate-800 py-3 rounded-xl text-xs font-bold text-slate-300 transition"
+                        >
+                          Save Static Snapshot Logs
+                        </button>
+                      </div>
+                    </React.Fragment>
+                  )}
+
+                  {/* SCREEN 5: RISK DIAGNOSTICS & THREAT ENGINE */}
+                  {currentScreen === 'risk' && (
+                    <React.Fragment>
+                      <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center space-y-3">
+                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest block">Quality Diagnostic Report</span>
+                        <h2 className={`text-3xl font-extrabold ${currentStatus === 'SAFE' ? 'text-emerald-400' : currentStatus === 'WARNING' ? 'text-amber-400' : 'text-red-400'}`}>
+                          {currentStatus === 'SAFE' && "System Stable"}
+                          {currentStatus === 'WARNING' && "Action Recommended"}
+                          {currentStatus === 'CRITICAL' && "Critical Spoilage!"}
+                        </h2>
+                        <p className="text-xs text-slate-400">Calculated overall risk metric index</p>
+                      </div>
+
+                      <div className="space-y-3 text-left">
+                        <span className="text-xs text-slate-500 uppercase font-bold tracking-wider block">Identified Hazard Metrics</span>
+                        
+                        {riskReasons.length > 0 ? (
+                          riskReasons.map((reason, index) => (
+                            <div key={index} className="bg-red-950/20 border border-red-900/60 p-4 rounded-xl flex items-start gap-3">
+                              <span className="text-red-400 shrink-0 mt-0.5"><Icons.ShieldAlert /></span>
+                              <div className="text-left space-y-0.5">
+                                <h4 className="text-xs font-bold text-red-200 uppercase">Fungal Spore Threat Detected</h4>
+                                <p className="text-xs text-slate-300 leading-normal">{reason}</p>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="bg-emerald-950/20 border border-emerald-900/60 p-4 rounded-xl flex items-start gap-3">
+                            <span className="text-emerald-400 shrink-0 mt-0.5"><Icons.ShieldCheck /></span>
+                            <div className="text-left space-y-0.5">
+                              <h4 className="text-xs font-bold text-emerald-200 uppercase">All Physical Thresholds Passed</h4>
+                              <p className="text-xs text-slate-300 leading-normal">
+                                All depth temperatures, inter-granular humidity, and equilibrium moisture calculations reside safely within structural boundaries.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-3 text-left">
+                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block border-b border-slate-800 pb-2">Secondary Biological Predictions</span>
+                        <div className="grid grid-cols-2 gap-y-3 text-xs">
+                          <div>
+                            <span className="text-slate-500 block">Insect Respiration:</span>
+                            <span className={`font-bold ${Math.max(tempT1, tempT2, tempT3) > 35 ? 'text-red-400' : 'text-slate-300'}`}>
+                              {Math.max(tempT1, tempT2, tempT3) > 35 ? "EXPONENTIAL" : "NOMINAL"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block">Dry Weight Loss:</span>
+                            <span className="font-bold text-slate-300 font-mono">
+                              {currentEMC > activeCrop.safeLimit ? "0.22% / wk" : "0.00% / wk"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block">Mold Growth Limit:</span>
+                            <span className={`font-bold ${currentEMC > 14.5 ? 'text-red-400' : 'text-slate-300'}`}>
+                              {currentEMC > 14.5 ? "DANGEROUS" : "INHIBITED"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block">Aflatoxin Risk index:</span>
+                            <span className={`font-bold ${currentEMC > 14 ? 'text-red-400' : 'text-emerald-400'}`}>
+                              {currentEMC > 14 ? "HIGH RISK" : "MINIMUM"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-2">
+                        <button 
+                          onClick={() => setCurrentScreen('recs')}
+                          className="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl text-xs font-bold text-white transition flex items-center justify-center gap-2"
+                        >
+                          Review Action Plan Advisor <Icons.ChevronRight />
+                        </button>
+                      </div>
+                    </React.Fragment>
+                  )}
+
+                  {/* SCREEN 6: RECOMMENDATIONS */}
+                  {currentScreen === 'recs' && (
+                    <React.Fragment>
+                      <div className="p-4 bg-emerald-950/20 border border-emerald-900/50 rounded-xl flex items-start gap-3 text-left">
+                        <span className="text-emerald-400 shrink-0 mt-0.5"><Icons.Sparkles /></span>
+                        <div className="text-left space-y-0.5">
+                          <h4 className="text-xs font-bold text-emerald-200 uppercase">Interactive Recommendation Guide</h4>
+                          <p className="text-xs text-slate-400">
+                            Based on the biological, physical, and thermodynamic variables collected from the probe.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4 text-left">
+                        <span className="text-xs text-slate-500 uppercase font-bold tracking-wider block">Recommended Operational Tasks</span>
+                        
+                        {currentStatus === 'SAFE' && (
+                          <div className="space-y-3">
+                            <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-1">
+                              <div className="flex items-center gap-2 font-bold text-emerald-400 text-xs">
+                                <span className="w-4 h-4 rounded-full bg-emerald-950 border border-emerald-800 flex items-center justify-center text-[10px] font-mono">1</span>
+                                <span>PROCEED TO PACK AND STORE</span>
+                              </div>
+                              <p className="text-xs text-slate-400 pl-6 leading-relaxed">
+                                Moisture is well within safe thresholds ({currentEMC.toFixed(1)}%). Proceed to bag the grain and store in dry bins.
+                              </p>
+                            </div>
+                            <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-1">
+                              <div className="flex items-center gap-2 font-bold text-slate-300 text-xs">
+                                <span className="w-4 h-4 rounded-full bg-slate-850 border border-slate-700 flex items-center justify-center text-[10px] font-mono">2</span>
+                                <span>PERIODIC RECORD LOGGING</span>
+                              </div>
+                              <p className="text-xs text-slate-400 pl-6 leading-relaxed">
+                                Log a reading every 3 days to verify there are no active, hidden hotspot formations developing within the core.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {currentStatus === 'WARNING' && (
+                          <div className="space-y-3">
+                            <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-1">
+                              <div className="flex items-center gap-2 font-bold text-amber-400 text-xs">
+                                <span className="w-4 h-4 rounded-full bg-amber-950 border border-amber-800 flex items-center justify-center text-[10px] font-mono">1</span>
+                                <span>INCREASE VENTILATION IMMEDIATELY</span>
+                              </div>
+                              <p className="text-xs text-slate-400 pl-6 leading-relaxed">
+                                The calculated EMC limit indicates marginal moisture levels. Turn on structural extraction fans immediately.
+                              </p>
+                            </div>
+                            <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-1">
+                              <div className="flex items-center gap-2 font-bold text-slate-300 text-xs">
+                                <span className="w-4 h-4 rounded-full bg-slate-850 border border-slate-700 flex items-center justify-center text-[10px] font-mono">2</span>
+                                <span>SAMPLE AND RECHECK</span>
+                              </div>
+                              <p className="text-xs text-slate-400 pl-6 leading-relaxed">
+                                Verify boundaries manually by pulling core grain samples and checking with secondary diagnostic devices.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {currentStatus === 'CRITICAL' && (
+                          <div className="space-y-3">
+                            <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-1">
+                              <div className="flex items-center gap-2 font-bold text-red-400 text-xs">
+                                <span className="w-4 h-4 rounded-full bg-red-950 border border-red-800 flex items-center justify-center text-[10px] font-mono">1</span>
+                                <span>IMMEDIATE AERATION & RE-DRYING</span>
+                              </div>
+                              <p className="text-xs text-slate-400 pl-6 leading-relaxed">
+                                Fungal activity will trigger heavy losses within 48 hours. De-bag and run the grain mass back to drying cement floors.
+                              </p>
+                            </div>
+                            <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-1">
+                              <div className="flex items-center gap-2 font-bold text-slate-300 text-xs">
+                                <span className="w-4 h-4 rounded-full bg-slate-850 border border-slate-700 flex items-center justify-center text-[10px] font-mono">2</span>
+                                <span>ISOLATE THE HOTSPOT AREA</span>
+                              </div>
+                              <p className="text-xs text-slate-400 pl-6 leading-relaxed">
+                                The 3D thermal profile indicates heat levels are centered in the bottom layer ({tempT3.toFixed(1)}°C). Isolate this block.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="pt-2">
+                        <button 
+                          onClick={() => setCurrentScreen('home')}
+                          className="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl text-xs font-bold text-white transition flex items-center justify-center gap-2"
+                        >
+                          Return to Dashboard
+                        </button>
+                      </div>
+                    </React.Fragment>
+                  )}
+
+                  {/* SCREEN 7: HISTORICAL LOGS */}
+                  {currentScreen === 'history' && (
+                    <React.Fragment>
+                      <div className="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs shrink-0 select-none">
+                        <span className="text-slate-400 font-semibold uppercase">Inspection Timeline Logs</span>
+                        <span className="text-[10px] bg-slate-950 border border-slate-800 text-emerald-400 py-1 px-2 rounded-md font-bold font-mono">
+                          {historyLog.length} RECORDS
+                        </span>
+                      </div>
+
+                      <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-3 shrink-0 text-left">
+                        <div className="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
+                          <span>Historical Moisture Limits</span>
+                          <span className="text-emerald-400 font-mono">Target: &lt;13.5%</span>
+                        </div>
+                        <div className="h-16 flex items-end justify-between px-2 gap-3 pt-4 select-none">
+                          <div className="flex-1 bg-slate-950 rounded-md h-full relative group">
+                            <div className="absolute w-full bg-emerald-500 rounded-md bottom-0" style={{height: "82%"}}></div>
+                            <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[8px] font-mono text-emerald-400 font-bold">12.8</span>
+                          </div>
+                          <div className="flex-1 bg-slate-950 rounded-md h-full relative group">
+                            <div className="absolute w-full bg-amber-500 rounded-md bottom-0" style={{height: "95%"}}></div>
+                            <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[8px] font-mono text-amber-400 font-bold">15.2</span>
+                          </div>
+                          <div className="flex-1 bg-slate-950 rounded-md h-full relative group">
+                            <div className="absolute w-full bg-emerald-500 rounded-md bottom-0" style={{height: "78%"}}></div>
+                            <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[8px] font-mono text-emerald-400 font-bold">12.1</span>
+                          </div>
+                          <div className="flex-1 bg-slate-950 rounded-md h-full relative group">
+                            <div className="absolute w-full bg-red-500 rounded-md bottom-0" style={{height: "100%"}}></div>
+                            <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[8px] font-mono text-red-400 font-bold">16.4</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        {historyLog.map((log) => (
+                          <div key={log.id} className="bg-slate-900 hover:bg-slate-850 p-3.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs transition">
+                            <div className="space-y-1 text-left">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-slate-200">{log.crop}</span>
+                                <span className="text-[9px] bg-slate-950 text-slate-400 py-0.5 px-1.5 rounded border border-slate-800 font-semibold">{log.mode}</span>
+                              </div>
+                              <span className="text-[9px] text-slate-500 block font-mono">{log.date}</span>
+                            </div>
+                            <div className="text-right space-y-1">
+                              <div className="flex items-center gap-2 justify-end">
+                                <span className="font-mono text-slate-400">{log.emc}% moisture</span>
+                                <span className={`w-2.5 h-2.5 rounded-full ${log.status === 'SAFE' ? 'bg-emerald-500' : log.status === 'WARNING' ? 'bg-amber-500' : 'bg-red-500'}`}></span>
+                              </div>
+                              <span className="text-[10px] text-slate-400">Score: <strong className="text-white">{log.score}/100</strong></span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </React.Fragment>
+                  )}
+
+                  {/* SCREEN 8: PROFILE SCREEN */}
+                  {currentScreen === 'profile' && (
+                    <React.Fragment>
+                      <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 flex items-center gap-3 text-left">
+                        <div className="w-12 h-12 bg-emerald-950 text-emerald-400 border border-emerald-900 rounded-full flex items-center justify-center font-bold text-lg shadow-inner">
+                          RK
+                        </div>
+                        <div className="text-left space-y-0.5">
+                          <h4 className="text-sm font-bold text-white">{farmerName}</h4>
+                          <p className="text-xs text-slate-400">Lead Farmer • South India FPO</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-4 text-xs text-left">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">App Configuration</span>
+                        
+                        <div className="space-y-2">
+                          <label className="text-slate-400 block font-semibold">Farmer Name Override</label>
+                          <input 
+                            type="text" value={farmerName} onChange={(e) => setFarmerName(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 px-3 text-slate-300 focus:outline-none focus:border-emerald-500 text-xs"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-slate-400 block font-semibold">Interface Language Selection</label>
+                          <select 
+                            value={language} onChange={(e) => setLanguage(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 px-3 text-slate-300 focus:outline-none focus:border-emerald-500 text-xs"
+                          >
+                            <option value="English">English (EN)</option>
+                            <option value="Hindi">हिन्दी (HI)</option>
+                            <option value="Telugu">తెలుగు (TE)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-3.5 text-xs text-left">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block border-b border-slate-800 pb-2">Academic Scaling Milestones</span>
+                        
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
+                            <span>Phase 2: CO₂ Integration</span>
+                            <span className="text-slate-500">Scheduled</span>
+                          </div>
+                          <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                            <div className="w-4/12 bg-slate-800 h-full"></div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
+                            <span>Phase 5: Automated Fan Control</span>
+                            <span className="text-slate-500">Conceptualized</span>
+                          </div>
+                          <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
+                            <div className="w-1/12 bg-slate-800 h-full"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  )}
+
+                </div>
+              )}
+
+              {/* MOBILE APP FOOTER NAVIGATION BAR */}
+              {currentScreen !== 'splash' && (
+                <div className="h-14 bg-slate-950 border-t border-slate-900 px-4 flex justify-between items-center shrink-0 select-none">
+                  <button 
+                    onClick={() => setCurrentScreen('home')}
+                    className={`flex-1 flex flex-col items-center gap-0.5 transition ${currentScreen === 'home' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
+                  >
+                    <span className="p-0.5"><Icons.Activity /></span>
+                    <span className="text-[8px] font-bold uppercase tracking-wider">Dashboard</span>
+                  </button>
+
+                  <button 
+                    onClick={() => { setCurrentScreen('drying'); setIsStorageMode(false); }}
+                    className={`flex-1 flex flex-col items-center gap-0.5 transition ${currentScreen === 'drying' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
+                  >
+                    <span className="p-0.5"><Icons.Sun /></span>
+                    <span className="text-[8px] font-bold uppercase tracking-wider">Drying</span>
+                  </button>
+
+                  <button 
+                    onClick={() => { setCurrentScreen('storage'); setIsStorageMode(true); }}
+                    className={`flex-1 flex flex-col items-center gap-0.5 transition ${currentScreen === 'storage' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
+                  >
+                    <span className="p-0.5"><Icons.Database /></span>
+                    <span className="text-[8px] font-bold uppercase tracking-wider">Storage</span>
+                  </button>
+
+                  <button 
+                    onClick={() => setCurrentScreen('history')}
+                    className={`flex-1 flex flex-col items-center gap-0.5 transition ${currentScreen === 'history' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
+                  >
+                    <span className="p-0.5"><Icons.History /></span>
+                    <span className="text-[8px] font-bold uppercase tracking-wider">Logs</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Android Indicator Bar */}
+              <div className="h-4 bg-slate-950 flex justify-center items-center shrink-0 pb-1 select-none">
+                <div className="w-28 h-1 bg-slate-800 rounded-full"></div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      );
+    }
+
+    // Mount application to DOM
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
