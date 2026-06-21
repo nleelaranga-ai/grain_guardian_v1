@@ -62,10 +62,18 @@
   <!-- React Root Insertion Point -->
   <div id="root" class="flex-1 flex flex-col md:flex-row min-h-screen"></div>
 
+  <!-- Global Preset Configuration to force Classic JSX Runtime -->
+  <script>
+    // Register custom preset to avoid ES module import injection
+    Babel.registerPreset('classic-react', {
+      presets: [
+        [Babel.availablePresets['react'], { runtime: 'classic' }]
+      ]
+    });
+  </script>
+
   <!-- React Application Core Logic -->
-  <script type="text/babel">
-    /** @jsxRuntime classic */
-    /** @jsx React.createElement */
+  <script type="text/babel" data-presets="classic-react">
     const { useState, useEffect } = React;
 
     // ============================================================================
