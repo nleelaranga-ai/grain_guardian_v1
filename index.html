@@ -621,10 +621,11 @@
     // APPLICATION DATA STATE ENGINE & MASTER ENDPOINT CONNECTIONS
     // ============================================================================
     const SUPABASE_URL = "https://mcfwsuqaxddhywgkljyn.supabase.co"; 
-    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_PUBLIC_KEY"; // Substitute your public Anon Token configuration string here
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const BACKEND_API_URL = "http://127.0.0.1:8000"; 
+    // Swap your custom domain / Render URL string directly here in production
+    const BACKEND_API_URL = "https://your-backend-service-name.onrender.com"; 
 
     const CROP_DATABASE = [
       { id: 0, name: "Paddy (Rice)", safeLimit: 13.5 },
@@ -661,30 +662,44 @@
     // ASYNCHRONOUS DATA PIPELINE ENDPOINTS INTERFACES
     // ============================================================================
     async function requestBackendEvaluation() {
+      const cropSelectEl = document.getElementById('cropSelect');
+      const cropTypeString = cropSelectEl.options[cropSelectEl.selectedIndex].text;
+
+      // 1. Realign the object parameters payload structure to match your AnalysisRequest schema
       const payload = {
-        crop_id: state.selectedCropIndex,
-        temp_t1: state.tempT1,
-        temp_t2: state.tempT2,
-        temp_t3: state.tempT3,
-        rh: state.isStorageMode ? state.interGranularHumidity : state.ambientHumidity,
-        is_storage: state.isStorageMode
+        user_id: "00000000-0000-0000-0000-000000000000",
+        crop_type: cropTypeString,
+        moisture: state.isStorageMode ? parseFloat(state.interGranularHumidity) : parseFloat(state.ambientHumidity),
+        temperature: state.isStorageMode ? parseFloat(state.tempT3) : parseFloat(state.ambientTemp),
+        humidity: state.isStorageMode ? parseFloat(state.interGranularHumidity) : parseFloat(state.ambientHumidity),
+        stored_mass_kg: 12000.0 // Your v3 operational engine benchmark mass payload
       };
 
       try {
-        const response = await fetch(`${BACKEND_API_URL}/api/calculate`, {
+        // 2. Point target route exactly to your live api/v3/analyze endpoint
+        const response = await fetch(`${BACKEND_API_URL}/api/v3/analyze`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
         
+        if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
         const data = await response.json();
-        state.lastCalculatedData = data;
         
-        // Sync data variables back into presentation layouts
-        ui.updateOverviewMetrics(data);
+        // Save reference state cleanly to local instance configuration parameters
+        state.lastCalculatedData = {
+          score: data.grain_health_index,
+          emc: data.biological_activity_index, // Maps biological activity indicators
+          thermal_average: (state.tempT1 + state.tempT2 + state.tempT3) / 3,
+          status: data.fungal_risk_status, // Syncs biological threat indexing scales
+          reasons: data.action_advisory.join(' | ')
+        };
+        
+        // 3. Bind properties dynamically straight back onto your presentation dashboard nodes
+        ui.updateOverviewMetrics(data, payload.moisture);
         if (state.currentTab === 'advisory') ui.updateAdvisoryPage(data);
       } catch (err) {
-        console.error("Computational synchronization failure: Using fallback engine", err);
+        console.error("Computational synchronization link failure:", err);
       }
     }
 
@@ -700,13 +715,13 @@
         crop_variety: crop.name.split(' ')[0],
         phasic_mode: state.isStorageMode ? "Storage" : "Drying",
         emc: state.lastCalculatedData.emc,
-        thermal_average: state.lastCalculatedData.thermal_average,
+        thermal_average: parseFloat(state.lastCalculatedData.thermal_average.toFixed(1)),
         threat_index: state.lastCalculatedData.status,
         score: state.lastCalculatedData.score
       };
 
       const { error } = await _supabase
-        .from('telemetry_logs')
+        .from('telemetry_logs') // Match your pre-designed table title exactly
         .insert([rowEntry]);
 
       if (error) {
@@ -778,24 +793,24 @@
     // DYNAMIC INTERFACE PRESENTATION SYSTEM
     // ============================================================================
     const ui = {
-      updateOverviewMetrics: function(data) {
-        document.getElementById('kpiScore').innerText = `${data.score}/100`;
-        document.getElementById('kpiEmc').innerText = `${data.emc.toFixed(1)}%`;
+      updateOverviewMetrics: function(data, currentMoistureInput) {
+        document.getElementById('kpiScore').innerText = `${data.grain_health_index}/100`;
+        document.getElementById('kpiEmc').innerText = `${currentMoistureInput}%`;
         document.getElementById('kpiT3').innerText = `${state.tempT3.toFixed(1)}°C`;
         document.getElementById('kpiPhase').innerText = state.isStorageMode ? "Active Storage" : "Drying Canopy";
 
         const alarmOverlay = document.getElementById('viewOverviewAlarmOverlay');
 
-        if (data.status === 'WARNING') {
-          document.getElementById('kpiScoreIcon').className = 'p-3 bg-amber-50 text-brand-warning border border-amber-100 rounded-2xl';
-          alarmOverlay.classList.add('hidden');
-        } else if (data.status === 'CRITICAL') {
-          document.getElementById('kpiScoreIcon').className = 'p-3 bg-rose-50 text-brand-danger border border-rose-100 rounded-2xl';
-          alarmOverlay.classList.remove('hidden');
-          document.getElementById('txtOverviewAlarmReasons').innerText = data.reasons;
-        } else {
+        if (data.grain_health_index >= 85) {
           document.getElementById('kpiScoreIcon').className = 'p-3 bg-emerald-50 text-brand-success border border-emerald-100 rounded-2xl';
           alarmOverlay.classList.add('hidden');
+        } else if (data.grain_health_index >= 60) {
+          document.getElementById('kpiScoreIcon').className = 'p-3 bg-amber-50 text-brand-warning border border-amber-100 rounded-2xl';
+          alarmOverlay.classList.add('hidden');
+        } else {
+          document.getElementById('kpiScoreIcon').className = 'p-3 bg-rose-50 text-brand-danger border border-rose-100 rounded-2xl';
+          alarmOverlay.classList.remove('hidden');
+          document.getElementById('txtOverviewAlarmReasons').innerText = data.action_advisory.join(' | ');
         }
 
         // Interpolate Cross Section Map Nodes Vectors
@@ -815,23 +830,23 @@
         document.getElementById('labelT2').innerText = `${state.tempT2.toFixed(1)}°C`;
         document.getElementById('labelT3').innerText = `${state.tempT3.toFixed(1)}°C`;
 
-        this.appendChartTelemetryData(data.emc, state.tempT3);
+        this.appendChartTelemetryData(currentMoistureInput, state.tempT3);
         updateBroadcasterDebugPanel(data);
       },
 
       updateAdvisoryPage: function(data) {
         let moldProgress = 15, moldText = 'INHIBITED', moldColor = 'text-brand-success', moldBar = 'bg-brand-success';
-        if (data.emc > 14.5) { moldText = 'CRITICAL (48H PROPAGATION)'; moldColor = 'text-brand-danger font-bold animate-pulse'; moldBar = 'bg-brand-danger'; moldProgress = 85;}
-        else if (data.emc > 13.5) { moldText = 'ELEVATED SEED THREAT'; moldColor = 'text-brand-warning'; moldBar = 'bg-brand-warning'; moldProgress = 55;}
+        if (data.fungal_risk_status === 'HIGH') { moldText = 'CRITICAL PROLIFERATION'; moldColor = 'text-brand-danger font-bold animate-pulse'; moldBar = 'bg-brand-danger'; moldProgress = 90;}
+        else if (data.fungal_risk_status === 'MEDIUM') { moldText = 'ELEVATED RISK SPECTRUM'; moldColor = 'text-brand-warning'; moldBar = 'bg-brand-warning'; moldProgress = 55;}
 
-        document.getElementById('idxMold').innerText = moldText;
+        document.getElementById('idxMold').innerText = `RISK: ${data.fungal_risk_status} (BAI: ${data.biological_activity_index})`;
         document.getElementById('idxMold').className = `font-bold font-mono text-[11px] ${moldColor}`;
         document.getElementById('barMold').className = `h-full transition-all duration-500 ${moldBar}`;
         document.getElementById('barMold').style.width = `${moldProgress}%`;
 
         let aflatoxinProgress = 5, aflaText = 'SAFE MATRIX', aflaColor = 'text-brand-success', aflaBar = 'bg-brand-success';
-        if (data.emc > 15.5) { aflaText = 'SEVERE AFLATOXIN SPIKE'; aflaColor = 'text-brand-danger animate-pulse'; aflaBar = 'bg-brand-danger'; aflatoxinProgress = 92; }
-        else if (data.emc > 14.0) { aflaText = 'RISK SPECTRUM OPEN'; aflaColor = 'text-brand-warning'; aflaBar = 'bg-brand-warning'; aflatoxinProgress = 48; }
+        if (data.fungal_risk_status === 'HIGH') { aflaText = 'SEVERE POTENTIAL BREACH'; aflaColor = 'text-brand-danger animate-pulse'; aflaBar = 'bg-brand-danger'; aflatoxinProgress = 92; }
+        else if (data.fungal_risk_status === 'MEDIUM') { aflaText = 'MONITOR ACTIVE CONTAMINANTS'; aflaColor = 'text-brand-warning'; aflaBar = 'bg-brand-warning'; aflatoxinProgress = 48; }
 
         document.getElementById('idxAflatoxin').innerText = aflaText;
         document.getElementById('idxAflatoxin').className = `font-bold font-mono text-[11px] ${aflaColor}`;
@@ -840,8 +855,8 @@
 
         const peakTemp = Math.max(state.tempT1, state.tempT2, state.tempT3);
         let insectProgress = 20, insText = 'NOMINAL', insColor = 'text-brand-success', insBar = 'bg-brand-success';
-        if (peakTemp > 38.0) { insText = 'EXPONENTIAL RESPIRATION'; insColor = 'text-brand-danger'; insBar = 'bg-brand-danger'; insectProgress = 90; }
-        else if (peakTemp > 31.0) { insText = 'METABOLISM ACCELERATING'; insColor = 'text-brand-warning'; insBar = 'bg-brand-warning'; insectProgress = 60; }
+        if (peakTemp > 38.0) { insText = 'EXPONENTIAL METABOLISM'; insColor = 'text-brand-danger'; insBar = 'bg-brand-danger'; insectProgress = 90; }
+        else if (peakTemp > 31.0) { insText = 'RESPIRATION ACCELERATING'; insColor = 'text-brand-warning'; insBar = 'bg-brand-warning'; insectProgress = 60; }
 
         document.getElementById('idxInsect').innerText = insText;
         document.getElementById('idxInsect').className = `font-bold font-mono text-[11px] ${insColor}`;
@@ -851,37 +866,21 @@
         const wrapper = document.getElementById('boxAdvisoryList');
         let listHtml = '';
 
-        if (data.status === 'SAFE') {
-          listHtml = `
+        data.action_advisory.forEach((adv, index) => {
+          let badgeColor = "bg-emerald-100 text-brand-success border-emerald-200";
+          if(adv.includes("CRITICAL") || adv.includes("SPIKE") || adv.includes("RISK")) {
+             badgeColor = "bg-red-100 text-brand-danger border-red-200";
+          }
+          listHtml += `
             <div class="bg-brand-cream p-4 rounded-2xl border border-slate-200/60 space-y-1">
-              <div class="flex items-center gap-2 font-bold text-brand-success text-xs">
-                <span class="w-5 h-5 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-[10px] font-mono text-brand-success">1</span>
-                <span>HARVEST PARAMETERS ARE CONFORMANT</span>
+              <div class="flex items-center gap-2 font-bold text-xs">
+                <span class="w-5 h-5 rounded-full ${badgeColor} border flex items-center justify-center text-[10px] font-mono">${index + 1}</span>
+                <span class="tracking-wide uppercase">${adv.split(':')[0]}</span>
               </div>
-              <p class="text-xs text-brand-muted pl-7 leading-relaxed">Dynamic boundaries match equilibrium targets (${data.emc.toFixed(1)}%). Proceed to store the grain batch into standard dry bins safely.</p>
+              <p class="text-xs text-brand-muted pl-7 leading-relaxed">${adv.split(':')[1] || adv}</p>
             </div>
           `;
-        } else if (data.status === 'WARNING') {
-          listHtml = `
-            <div class="bg-brand-cream p-4 rounded-2xl border border-slate-200/60 space-y-1">
-              <div class="flex items-center gap-2 font-bold text-brand-warning text-xs">
-                <span class="w-5 h-5 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center text-[10px] font-mono text-brand-warning">1</span>
-                <span>ENGAGE FORCED AIR VENTILATION</span>
-              </div>
-              <p class="text-xs text-brand-muted pl-7 leading-relaxed">Marginal moisture thresholds reached. Engage electrical extraction fan sweeps immediately to clear out localized latent humidity buildup.</p>
-            </div>
-          `;
-        } else {
-          listHtml = `
-            <div class="bg-brand-cream p-4 rounded-2xl border border-slate-200/60 space-y-1">
-              <div class="flex items-center gap-2 font-bold text-brand-danger text-xs">
-                <span class="w-5 h-5 rounded-full bg-red-100 border border-red-200 flex items-center justify-center text-[10px] font-mono text-brand-danger">1</span>
-                <span>ANOMALY WARNING: AIR SHIFT & RE-DRY REQUIRED</span>
-              </div>
-              <p class="text-xs text-brand-muted pl-7 leading-relaxed">Fungal propagation limits have breached critical targets. Transport hot bag allocations back to open yard concrete surfaces to reduce biological respiration immediately.</p>
-            </div>
-          `;
-        }
+        });
         wrapper.innerHTML = listHtml;
       },
 
@@ -891,8 +890,8 @@
 
         state.historyLog.forEach(log => {
           let badge = 'bg-emerald-500/10 text-brand-success border-emerald-500/20';
-          if (log.status === 'WARNING') badge = 'bg-amber-500/10 text-brand-warning border-amber-500/20';
-          if (log.status === 'CRITICAL') badge = 'bg-rose-500/10 text-brand-danger border-rose-500/20';
+          if (log.status === 'WARNING' || log.status === 'MEDIUM') badge = 'bg-amber-500/10 text-brand-warning border-amber-500/20';
+          if (log.status === 'CRITICAL' || log.status === 'HIGH') badge = 'bg-rose-500/10 text-brand-danger border-rose-500/20';
 
           tableHtml += `
             <tr class="hover:bg-brand-cream/60 transition">
@@ -901,7 +900,7 @@
               <td class="py-4 px-6">
                 <span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200/60 font-mono text-[10px] font-bold uppercase">${log.mode}</span>
               </td>
-              <td class="py-4 px-6 font-mono font-bold text-brand-dark">${log.emc.toFixed(1)}%</td>
+              <td class="py-4 px-6 font-mono font-bold text-brand-dark">${log.emc.toFixed(1)}</td>
               <td class="py-4 px-6 font-mono text-brand-muted">${log.tAvg.toFixed(1)}°C</td>
               <td class="py-4 px-6">
                 <span class="${badge} border px-3 py-1 rounded-full font-bold text-[9px] tracking-wider uppercase">${log.status}</span>
@@ -919,8 +918,8 @@
           state.chartHistoryEMC.shift();
           state.chartHistoryT3.shift();
         }
-        state.chartHistoryEMC.push(parseFloat(emc.toFixed(2)));
-        state.chartHistoryT3.push(parseFloat(t3.toFixed(2)));
+        state.chartHistoryEMC.push(parseFloat(emc));
+        state.chartHistoryT3.push(parseFloat(t3));
 
         liveChartInstance.data.datasets[0].data = [...state.chartHistoryEMC];
         liveChartInstance.data.datasets[1].data = [...state.chartHistoryT3];
@@ -937,7 +936,7 @@
             labels: dynamicLabels,
             datasets: [
               {
-                label: 'Equilibrium Moisture (EMC %)',
+                label: 'Equilibrium Moisture Input (%)',
                 data: [...state.chartHistoryEMC],
                 borderColor: '#10b981',
                 backgroundColor: 'rgba(16, 185, 129, 0.04)',
@@ -966,14 +965,14 @@
               yEMC: {
                 type: 'linear',
                 position: 'left',
-                min: 8, max: 22,
+                min: 20, max: 100,
                 ticks: { font: { size: 9 } },
                 grid: { color: 'rgba(0,0,0,0.03)' }
               },
               yTemp: {
                 type: 'linear',
                 position: 'right',
-                min: 10, max: 60,
+                min: 0, max: 80,
                 ticks: { font: { size: 9 } },
                 grid: { display: false }
               }
@@ -1037,7 +1036,7 @@
 
     function updateBroadcasterDebugPanel(data) {
       const rawPhase = state.isStorageMode ? "STORAGE" : "DRYING";
-      const payloadString = `${rawPhase}, T1:${state.tempT1.toFixed(1)}°C, T2:${state.tempT2.toFixed(1)}°C, T3:${state.tempT3.toFixed(1)}°C, EMC:${data ? data.emc.toFixed(1) : '--'}%`;
+      const payloadString = `${rawPhase}, T1:${state.tempT1.toFixed(1)}°C, T2:${state.tempT2.toFixed(1)}°C, T3:${state.tempT3.toFixed(1)}°C, BAI:${data ? data.biological_activity_index : '--'}`;
       document.getElementById('txtDebugPayload').innerText = payloadString;
     }
 
