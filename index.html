@@ -661,47 +661,53 @@
     // ASYNCHRONOUS DATA PIPELINE ENDPOINTS INTERFACES
     // ============================================================================
     async function requestBackendEvaluation() {
-      const cropSelectEl = document.getElementById('cropSelect');
-      const cropTypeString = cropSelectEl.options[cropSelectEl.selectedIndex].text;
+  // 1. Compile payload structure precisely as expected by the new schema definitions
+  const payload = {
+    crop_id: parseInt(state.selectedCropIndex),
+    temp_t1: parseFloat(state.tempT1),
+    temp_t2: parseFloat(state.tempT2),
+    temp_t3: parseFloat(state.tempT3),
+    rh: state.isStorageMode ? parseFloat(state.interGranularHumidity) : parseFloat(state.ambientHumidity),
+    is_storage: state.isStorageMode
+  };
 
-      // 1. Realign the object parameters payload structure to match your AnalysisRequest schema
-      const payload = {
-        user_id: "00000000-0000-0000-0000-000000000000",
-        crop_type: cropTypeString,
-        moisture: state.isStorageMode ? parseFloat(state.interGranularHumidity) : parseFloat(state.ambientHumidity),
-        temperature: state.isStorageMode ? parseFloat(state.tempT3) : parseFloat(state.ambientTemp),
-        humidity: state.isStorageMode ? parseFloat(state.interGranularHumidity) : parseFloat(state.ambientHumidity),
-        stored_mass_kg: 12000.0 // Your v3 operational engine benchmark mass payload
-      };
-
-      try {
-        // 2. Point target route exactly to your live api/v3/analyze endpoint
-        const response = await fetch(`${BACKEND_API_URL}/api/v3/analyze`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        
-        if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
-        const data = await response.json();
-        
-        // Save reference state cleanly to local instance configuration parameters
-        state.lastCalculatedData = {
-          score: data.grain_health_index,
-          emc: data.biological_activity_index, // Maps biological activity indicators
-          thermal_average: (state.tempT1 + state.tempT2 + state.tempT3) / 3,
-          status: data.fungal_risk_status, // Syncs biological threat indexing scales
-          reasons: data.action_advisory.join(' | ')
-        };
-        
-        // 3. Bind properties dynamically straight back onto your presentation dashboard nodes
-        ui.updateOverviewMetrics(data, payload.moisture);
-        if (state.currentTab === 'advisory') ui.updateAdvisoryPage(data);
-      } catch (err) {
-        console.error("Computational synchronization link failure:", err);
-      }
+  try {
+    const response = await fetch(`${BACKEND_API_URL}/api/v3/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
+    const data = await response.json();
+    
+    // 2. Maps calculated metrics securely into global state arrays for Supabase tracking
+    state.lastCalculatedData = {
+      score: data.grain_health_index,
+      emc: data.biological_activity_index, // Tracks biological index curve values
+      thermal_average: data.thermal_average,
+      status: data.fungal_risk_status, 
+      reasons: data.action_advisory.join(' | ')
+    };
+    
+    // 3. Update Presentation Nodes
+    document.getElementById('kpiScore').innerText = `${data.grain_health_index}/100`;
+    document.getElementById('kpiEmc').innerText = `${payload.rh}%`; 
+    document.getElementById('kpiT3').innerText = `${state.tempT3.toFixed(1)}°C`;
+    
+    const alarmOverlay = document.getElementById('viewOverviewAlarmOverlay');
+    if (data.grain_health_index < 60) {
+      alarmOverlay.classList.remove('hidden');
+      document.getElementById('txtOverviewAlarmReasons').innerText = data.action_advisory.join(' | ');
+    } else {
+      alarmOverlay.classList.add('hidden');
     }
-
+    
+    ui.appendChartTelemetryData(payload.rh, state.tempT3);
+  } catch (err) {
+    console.error("Computational synchronization link failure:", err);
+  }
+}
     async function commitStateToLogs() {
       if (!state.lastCalculatedData) {
         alert("No active analytics data found to capture. Please adjust variables.");
