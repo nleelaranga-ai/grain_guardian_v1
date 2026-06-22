@@ -36,6 +36,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body {
@@ -83,7 +84,7 @@
   <nav class="glass-nav sticky top-0 z-50 h-20 flex items-center justify-between px-8 lg:px-16 transition-all duration-300">
     <div class="flex items-center gap-3 cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
       <div class="w-10 h-10 bg-brand-dark rounded-xl flex items-center justify-center text-brand-primary shadow-md">
-        <i class="fa-solid dM fa-shield-halved text-lg"></i>
+        <i class="fa-solid fa-shield-halved text-lg"></i>
       </div>
       <div>
         <span class="text-lg font-extrabold tracking-tight text-brand-dark block">GrainGuardian</span>
@@ -233,11 +234,11 @@
         <div class="space-y-2">
           <span class="text-[10px] uppercase font-bold text-brand-muted tracking-wider block">Pre-configured Testing Environments</span>
           <div class="grid grid-cols-2 gap-2">
-            <button onclick="applyEnvironmentPreset('fungal')" class="p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-left transition-all">
+            <button id="btnPresetFungal" class="p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-left transition-all">
               <span class="text-xs font-bold text-brand-danger block mb-0.5">Fungal Hotspot</span>
               <span class="text-[9px] text-brand-muted block leading-tight">Simulates high temperature spikes in deep-pile layers.</span>
             </button>
-            <button onclick="applyEnvironmentPreset('ideal')" class="p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-left transition-all">
+            <button id="btnPresetIdeal" class="p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-left transition-all">
               <span class="text-xs font-bold text-brand-success block mb-0.5">Ideal Cold Storage</span>
               <span class="text-[9px] text-brand-muted block leading-tight">Maintains low humidity and uniform temperatures.</span>
             </button>
@@ -342,7 +343,7 @@
           <div class="bg-white border border-slate-200/80 p-5 rounded-3xl text-left flex items-center justify-between">
             <div class="space-y-1">
               <span class="text-[10px] uppercase font-bold text-brand-muted">Dynamic Integrity Score</span>
-              <h3 id="kpiScore" class="text-3xl font-black text-brand-dark font-mono">92/100</h3>
+              <h3 id="kpiScore" class="text-3xl font-black text-brand-dark font-mono">--/100</h3>
             </div>
             <span id="kpiScoreIcon" class="p-3 bg-emerald-50 text-brand-success border border-emerald-100 rounded-2xl"><i class="fa-solid fa-square-poll-vertical text-lg"></i></span>
           </div>
@@ -350,7 +351,7 @@
           <div class="bg-white border border-slate-200/80 p-5 rounded-3xl text-left flex items-center justify-between">
             <div class="space-y-1">
               <span class="text-[10px] uppercase font-bold text-brand-muted">Calculated Moisture (EMC)</span>
-              <h3 id="kpiEmc" class="text-3xl font-black text-brand-dark font-mono">12.8%</h3>
+              <h3 id="kpiEmc" class="text-3xl font-black text-brand-dark font-mono">--%</h3>
             </div>
             <span id="kpiEmcIcon" class="p-3 bg-blue-50 text-brand-blue border border-blue-100 rounded-2xl"><i class="fa-solid fa-droplet text-lg"></i></span>
           </div>
@@ -358,7 +359,7 @@
           <div class="bg-white border border-slate-200/80 p-5 rounded-3xl text-left flex items-center justify-between">
             <div class="space-y-1">
               <span class="text-[10px] uppercase font-bold text-brand-muted">Core Temperature (T3)</span>
-              <h3 id="kpiT3" class="text-3xl font-black text-brand-dark font-mono">29.8°C</h3>
+              <h3 id="kpiT3" class="text-3xl font-black text-brand-dark font-mono">--°C</h3>
             </div>
             <span id="kpiT3Icon" class="p-3 bg-amber-50 text-brand-warning border border-amber-100 rounded-2xl"><i class="fa-solid fa-temperature-three-quarters text-lg"></i></span>
           </div>
@@ -480,8 +481,7 @@
               <span class="text-[10px] uppercase font-bold text-brand-muted tracking-wider block">Recommended Action Workflows</span>
               <h3 class="text-md font-bold text-brand-dark mt-0.5">Deterministic mitigation steps to protect reserve inventory assets:</h3>
             </div>
-            <div id="boxAdvisoryList" class="space-y-3 pt-2">
-              </div>
+            <div id="boxAdvisoryList" class="space-y-3 pt-2"></div>
           </div>
         </div>
       </div>
@@ -500,8 +500,7 @@
                   <th class="py-4 px-6">System Threat Index</th>
                 </tr>
               </thead>
-              <tbody id="domAuditTableBody" class="divide-y divide-slate-100 font-medium text-brand-dark/90">
-                </tbody>
+              <tbody id="domAuditTableBody" class="divide-y divide-slate-100 font-medium text-brand-dark/90"></tbody>
             </table>
           </div>
         </div>
@@ -616,16 +615,21 @@
   </footer>
 
   <script>
-    // Global chart instance storage tracker
     let liveChartInstance = null;
 
     // ============================================================================
-    // APPLICATION ARCHITECTURAL DATA STATES
+    // APPLICATION DATA STATE ENGINE & MASTER ENDPOINT CONNECTIONS
     // ============================================================================
+    const SUPABASE_URL = "https://your-project-id.supabase.co"; 
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const BACKEND_API_URL = "http://127.0.0.1:8000"; 
+
     const CROP_DATABASE = [
-      { id: 0, name: "Paddy (Rice)", c1: 1.9187e-5, c2: 51.161, c3: 2.4484, safeLimit: 13.5 },
-      { id: 1, name: "Wheat", c1: 2.3007e-5, c2: 35.853, c3: 2.2857, safeLimit: 13.0 },
-      { id: 2, name: "Maize (Corn)", c1: 8.6541e-5, c2: 49.810, c3: 1.8634, safeLimit: 13.5 }
+      { id: 0, name: "Paddy (Rice)", safeLimit: 13.5 },
+      { id: 1, name: "Wheat", safeLimit: 13.0 },
+      { id: 2, name: "Maize (Corn)", safeLimit: 13.5 }
     ];
 
     const state = {
@@ -634,114 +638,125 @@
       bleConnected: true,
       isStorageMode: true,
 
-      // Live calibrator values (Storage Mode)
       tempT1: 28.5,
       tempT2: 29.1,
       tempT3: 29.8,
       interGranularHumidity: 58.0,
 
-      // Ambient values (Drying Mode)
       ambientTemp: 30.0,
       ambientHumidity: 62.0,
 
-      // Realtime plot metrics lines arrays
       chartHistoryEMC: [12.2, 12.8, 12.5, 12.4, 13.0, 12.7, 12.9, 12.8],
       chartHistoryT3: [25.0, 26.5, 27.2, 28.1, 29.0, 29.4, 29.6, 29.8],
 
-      // Timeline Databases logs
-      historyLog: []
+      historyLog: [],
+      lastCalculatedData: null
     };
 
-    // Initialize state database loading safely via LocalStorage
-    function loadPersistedHistoryLogs() {
-      const saved = localStorage.getItem("grainLogs_v2");
-      if (saved) {
-        try {
-          state.historyLog = JSON.parse(saved);
-        } catch(e) {
-          state.historyLog = getDefaultHistoryLogs();
-        }
-      } else {
-        state.historyLog = getDefaultHistoryLogs();
-        localStorage.setItem("grainLogs_v2", JSON.stringify(state.historyLog));
-      }
-    }
-
-    function getDefaultHistoryLogs() {
-      return [
-        { id: 1, date: "2026-06-05 14:20", crop: "Paddy", mode: "Storage", score: 92, status: "SAFE", emc: 12.8, tAvg: 29.2 },
-        { id: 2, date: "2026-06-03 10:15", crop: "Paddy", mode: "Drying", score: 45, status: "WARNING", emc: 15.2, tAvg: 32.4 },
-        { id: 3, date: "2026-05-28 09:00", crop: "Wheat", mode: "Storage", score: 96, status: "SAFE", emc: 12.1, tAvg: 26.8 },
-        { id: 4, date: "2026-05-15 16:40", crop: "Paddy", mode: "Storage", score: 32, status: "CRITICAL", emc: 16.4, tAvg: 41.5 }
-      ];
-    }
-
-    function clearLocalStorageLogs() {
-      state.historyLog = [];
-      localStorage.setItem("grainLogs_v2", JSON.stringify([]));
-      ui.updateAuditDatabasePage();
-    }
-
-    // ============================================================================
-    // MATHEMATICAL LOGIC CALCULATIONS
-    // ============================================================================
     function getActiveCrop() {
       return CROP_DATABASE[state.selectedCropIndex];
     }
 
-    function calculateEMC(temp, rh, crop) {
-      const rhDecimal = Math.max(0.1, Math.min(99.9, rh)) / 100.0;
-      const term1 = -Math.log(1.0 - rhDecimal);
-      const term2 = crop.c1 * (temp + crop.c2);
-      if (term2 <= 0) return 0;
-      return Math.pow(term1 / term2, 1.0 / crop.c3) * 100;
+    // ============================================================================
+    // ASYNCHRONOUS DATA PIPELINE ENDPOINTS INTERFACES
+    // ============================================================================
+    async function requestBackendEvaluation() {
+      const payload = {
+        crop_id: state.selectedCropIndex,
+        temp_t1: state.tempT1,
+        temp_t2: state.tempT2,
+        temp_t3: state.tempT3,
+        rh: state.isStorageMode ? state.interGranularHumidity : state.ambientHumidity,
+        is_storage: state.isStorageMode
+      };
+
+      try {
+        const response = await fetch(`${BACKEND_API_URL}/api/calculate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        state.lastCalculatedData = data;
+        
+        // Sync data variables back into presentation layouts
+        ui.updateOverviewMetrics(data);
+        if (state.currentTab === 'advisory') ui.updateAdvisoryPage(data);
+      } catch (err) {
+        console.error("Computational synchronization failure: Using fallback engine", err);
+      }
     }
 
-    function computeHealthMetrics() {
+    async function commitStateToLogs() {
+      if (!state.lastCalculatedData) {
+        alert("No active analytics data found to capture. Please adjust variables.");
+        return;
+      }
+      
       const crop = getActiveCrop();
-      const currentEMC = state.isStorageMode 
-        ? calculateEMC(state.tempT3, state.interGranularHumidity, crop) 
-        : calculateEMC(state.ambientTemp, state.ambientHumidity, crop);
+      
+      const rowEntry = {
+        crop_variety: crop.name.split(' ')[0],
+        phasic_mode: state.isStorageMode ? "Storage" : "Drying",
+        emc: state.lastCalculatedData.emc,
+        thermal_average: state.lastCalculatedData.thermal_average,
+        threat_index: state.lastCalculatedData.status,
+        score: state.lastCalculatedData.score
+      };
 
-      let score = 100;
-      let reasons = [];
+      const { error } = await _supabase
+        .from('telemetry_logs')
+        .insert([rowEntry]);
 
-      // 1. Moisture deviations
-      const moistureGap = currentEMC - crop.safeLimit;
-      if (moistureGap > 0) {
-        score -= Math.round(moistureGap * 15);
-        reasons.push(`Physical moisture envelopes have climbed to ${currentEMC.toFixed(1)}%, surpassing safe thresholds (${crop.safeLimit}%).`);
+      if (error) {
+        alert("Database persistence fault: " + error.message);
+      } else {
+        dashboardNav.switchTab('logs');
+        await loadHistoryLogsFromSupabase();
       }
+    }
 
-      // 2. Heat conduction deltas
-      const maxDiff = Math.max(
-        Math.abs(state.tempT1 - state.tempT2),
-        Math.abs(state.tempT2 - state.tempT3),
-        Math.abs(state.tempT1 - state.tempT3)
-      );
-      if (maxDiff > 4.0) {
-        score -= 25;
-        reasons.push(`Elevated thermal gradient delta identified (ΔT = ${maxDiff.toFixed(1)}°C). Core respiration indicated active hotspot development.`);
+    async function loadHistoryLogsFromSupabase() {
+      const { data, error } = await _supabase
+        .from('telemetry_logs')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error connecting to Supabase storage instance:", error);
+        state.historyLog = [];
+      } else if (data) {
+        state.historyLog = data.map(record => ({
+          date: record.created_at ? new Date(record.created_at).toISOString().replace('T', ' ').substring(0, 16) : "Pending Sync",
+          crop: record.crop_variety,
+          mode: record.phasic_mode,
+          emc: parseFloat(record.emc),
+          tAvg: parseFloat(record.thermal_average),
+          status: record.threat_index
+        }));
       }
+      ui.updateAuditDatabasePage();
+    }
 
-      // 3. Absolute peak thresholds
-      const absoluteMax = Math.max(state.tempT1, state.tempT2, state.tempT3);
-      if (absoluteMax > 38.0) {
-        score -= 30;
-        reasons.push(`Inner sensor node components show absolute hyper-heating spikes (${absoluteMax.toFixed(1)}°C).`);
+    async function clearLocalStorageLogs() {
+      if (confirm("Are you sure you want to completely erase the live logs audit pool?")) {
+        const { error } = await _supabase
+          .from('telemetry_logs')
+          .delete()
+          .neq('crop_variety', 'placeholder_override');
+          
+        if (error) {
+          alert("Could not complete truncation routine: " + error.message);
+        } else {
+          await loadHistoryLogsFromSupabase();
+        }
       }
-
-      score = Math.max(0, Math.min(100, score));
-      let status = "SAFE";
-      if (score < 60) status = "CRITICAL";
-      else if (score < 85) status = "WARNING";
-
-      return { score, status, reasons, currentEMC, maxDiff, absoluteMax };
     }
 
     function interpolateTempColor(temp) {
-      if (temp <= 15) return "#10b981"; // Safe Green
-      if (temp >= 45) return "#ef4444"; // Hazard Red
+      if (temp <= 15) return "#10b981";
+      if (temp >= 45) return "#ef4444";
       
       const parseHex = (c) => parseInt(c.slice(1), 16);
       const mixHex = (c1, c2, f) => {
@@ -760,45 +775,30 @@
     }
 
     // ============================================================================
-    // DISPLAY PLATFORM PRESENTATION INTERFACES
+    // DYNAMIC INTERFACE PRESENTATION SYSTEM
     // ============================================================================
     const ui = {
-      updateOverview: function() {
-        const metrics = computeHealthMetrics();
-        const activeCropObj = getActiveCrop();
-
-        // 1. KPI parameters bindings
-        document.getElementById('kpiScore').innerText = `${metrics.score}/100`;
-        document.getElementById('kpiEmc').innerText = `${metrics.currentEMC.toFixed(1)}%`;
+      updateOverviewMetrics: function(data) {
+        document.getElementById('kpiScore').innerText = `${data.score}/100`;
+        document.getElementById('kpiEmc').innerText = `${data.emc.toFixed(1)}%`;
         document.getElementById('kpiT3').innerText = `${state.tempT3.toFixed(1)}°C`;
         document.getElementById('kpiPhase').innerText = state.isStorageMode ? "Active Storage" : "Drying Canopy";
 
-        // Dynamic theme alerts configurations
-        let strokeColor = '#10b981';
-        let badgeText = 'SAFE STORAGE';
-        let frameGlow = 'bg-white border border-slate-200 p-6 rounded-3xl text-left flex items-center justify-between';
         const alarmOverlay = document.getElementById('viewOverviewAlarmOverlay');
 
-        if (metrics.status === 'WARNING') {
-          strokeColor = '#f59e0b';
-          badgeText = 'CAUTION WARNING';
+        if (data.status === 'WARNING') {
           document.getElementById('kpiScoreIcon').className = 'p-3 bg-amber-50 text-brand-warning border border-amber-100 rounded-2xl';
-        } else if (metrics.status === 'CRITICAL') {
-          strokeColor = '#ef4444';
-          badgeText = 'CRITICAL THREAT';
+          alarmOverlay.classList.add('hidden');
+        } else if (data.status === 'CRITICAL') {
           document.getElementById('kpiScoreIcon').className = 'p-3 bg-rose-50 text-brand-danger border border-rose-100 rounded-2xl';
+          alarmOverlay.classList.remove('hidden');
+          document.getElementById('txtOverviewAlarmReasons').innerText = data.reasons;
         } else {
           document.getElementById('kpiScoreIcon').className = 'p-3 bg-emerald-50 text-brand-success border border-emerald-100 rounded-2xl';
-        }
-
-        if (metrics.status === 'CRITICAL') {
-          alarmOverlay.classList.remove('hidden');
-          document.getElementById('txtOverviewAlarmReasons').innerText = metrics.reasons.join(' | ');
-        } else {
           alarmOverlay.classList.add('hidden');
         }
 
-        // 2. Spatial 2D Interpolator Definitions
+        // Interpolate Cross Section Map Nodes Vectors
         const c1 = interpolateTempColor(state.tempT1);
         const c2 = interpolateTempColor(state.tempT2);
         const c3 = interpolateTempColor(state.tempT3);
@@ -815,18 +815,14 @@
         document.getElementById('labelT2').innerText = `${state.tempT2.toFixed(1)}°C`;
         document.getElementById('labelT3').innerText = `${state.tempT3.toFixed(1)}°C`;
 
-        // 3. Update ChartJS Plot
-        this.appendChartTelemetryData(metrics.currentEMC, state.tempT3);
+        this.appendChartTelemetryData(data.emc, state.tempT3);
+        updateBroadcasterDebugPanel(data);
       },
 
-      updateAdvisoryPage: function() {
-        const metrics = computeHealthMetrics();
-        const activeCropObj = getActiveCrop();
-
-        // Mold, aflatoxin, insect risk indicators recalculator
+      updateAdvisoryPage: function(data) {
         let moldProgress = 15, moldText = 'INHIBITED', moldColor = 'text-brand-success', moldBar = 'bg-brand-success';
-        if (metrics.currentEMC > 14.5) { dest = 90; moldText = 'CRITICAL (48H PROPAGATION)'; moldColor = 'text-brand-danger font-bold animate-pulse'; moldBar = 'bg-brand-danger'; moldProgress = 85;}
-        else if (metrics.currentEMC > 13.5) { moldText = 'ELEVATED SEED THREAT'; moldColor = 'text-brand-warning'; moldBar = 'bg-brand-warning'; moldProgress = 55;}
+        if (data.emc > 14.5) { moldText = 'CRITICAL (48H PROPAGATION)'; moldColor = 'text-brand-danger font-bold animate-pulse'; moldBar = 'bg-brand-danger'; moldProgress = 85;}
+        else if (data.emc > 13.5) { moldText = 'ELEVATED SEED THREAT'; moldColor = 'text-brand-warning'; moldBar = 'bg-brand-warning'; moldProgress = 55;}
 
         document.getElementById('idxMold').innerText = moldText;
         document.getElementById('idxMold').className = `font-bold font-mono text-[11px] ${moldColor}`;
@@ -834,11 +830,11 @@
         document.getElementById('barMold').style.width = `${moldProgress}%`;
 
         let aflatoxinProgress = 5, aflaText = 'SAFE MATRIX', aflaColor = 'text-brand-success', aflaBar = 'bg-brand-success';
-        if (metrics.currentEMC > 15.5) { aflaText = 'SEVERE AFLATOXIN SPIKE'; aflaColor = 'text-brand-danger animate-pulse'; aflaBar = 'bg-brand-danger'; aflatoxinProgress = 92; }
-        else if (metrics.currentEMC > 14.0) { aflaText = 'RISK SPECTRUM OPEN'; aflaColor = 'text-brand-warning'; aflaBar = 'bg-brand-warning'; aflatoxinProgress = 48; }
+        if (data.emc > 15.5) { aflaText = 'SEVERE AFLATOXIN SPIKE'; aflaColor = 'text-brand-danger animate-pulse'; aflaBar = 'bg-brand-danger'; aflatoxinProgress = 92; }
+        else if (data.emc > 14.0) { aflaText = 'RISK SPECTRUM OPEN'; aflaColor = 'text-brand-warning'; aflaBar = 'bg-brand-warning'; aflatoxinProgress = 48; }
 
         document.getElementById('idxAflatoxin').innerText = aflaText;
-        document.getElementById('idxAflatoxin').className = `font-bold font-mono text-[11px] ${aflatColor}`;
+        document.getElementById('idxAflatoxin').className = `font-bold font-mono text-[11px] ${aflaColor}`;
         document.getElementById('barAflatoxin').className = `h-full transition-all duration-500 ${aflaBar}`;
         document.getElementById('barAflatoxin').style.width = `${aflatoxinProgress}%`;
 
@@ -852,28 +848,20 @@
         document.getElementById('barInsect').className = `h-full transition-all duration-500 ${insBar}`;
         document.getElementById('barInsect').style.width = `${insectProgress}%`;
 
-        // Action workflow lists builder
         const wrapper = document.getElementById('boxAdvisoryList');
         let listHtml = '';
 
-        if (metrics.status === 'SAFE') {
+        if (data.status === 'SAFE') {
           listHtml = `
             <div class="bg-brand-cream p-4 rounded-2xl border border-slate-200/60 space-y-1">
               <div class="flex items-center gap-2 font-bold text-brand-success text-xs">
                 <span class="w-5 h-5 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-[10px] font-mono text-brand-success">1</span>
                 <span>HARVEST PARAMETERS ARE CONFORMANT</span>
               </div>
-              <p class="text-xs text-brand-muted pl-7 leading-relaxed">Dynamic boundaries match equilibrium targets (${metrics.currentEMC.toFixed(1)}%). Proceed to store the grain batch into standard dry bins or bag stacks safely.</p>
-            </div>
-            <div class="bg-brand-cream p-4 rounded-2xl border border-slate-200/60 space-y-1">
-              <div class="flex items-center gap-2 font-bold text-slate-700 text-xs">
-                <span class="w-5 h-5 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-[10px] font-mono text-slate-600">2</span>
-                <span>ROUTINE INTERVAL SAMPLING</span>
-              </div>
-              <p class="text-xs text-brand-muted pl-7 leading-relaxed">Execute standard testing loops every 3 days. Use the multi-depth sensor lines to check for internal moisture shifting anomalies.</p>
+              <p class="text-xs text-brand-muted pl-7 leading-relaxed">Dynamic boundaries match equilibrium targets (${data.emc.toFixed(1)}%). Proceed to store the grain batch into standard dry bins safely.</p>
             </div>
           `;
-        } else if (metrics.status === 'WARNING') {
+        } else if (data.status === 'WARNING') {
           listHtml = `
             <div class="bg-brand-cream p-4 rounded-2xl border border-slate-200/60 space-y-1">
               <div class="flex items-center gap-2 font-bold text-brand-warning text-xs">
@@ -881,13 +869,6 @@
                 <span>ENGAGE FORCED AIR VENTILATION</span>
               </div>
               <p class="text-xs text-brand-muted pl-7 leading-relaxed">Marginal moisture thresholds reached. Engage electrical extraction fan sweeps immediately to clear out localized latent humidity buildup.</p>
-            </div>
-            <div class="bg-brand-cream p-4 rounded-2xl border border-slate-200/60 space-y-1">
-              <div class="flex items-center gap-2 font-bold text-slate-700 text-xs">
-                <span class="w-5 h-5 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-[10px] font-mono text-slate-600">2</span>
-                <span>MANUAL VALIDATION EXTRACTION</span>
-              </div>
-              <p class="text-xs text-brand-muted pl-7 leading-relaxed">Extract physical kernel samples from depth 2 (0.7m) coordinates. Verify baseline moisture limits to confirm sensor calibration stability.</p>
             </div>
           `;
         } else {
@@ -899,16 +880,8 @@
               </div>
               <p class="text-xs text-brand-muted pl-7 leading-relaxed">Fungal propagation limits have breached critical targets. Transport hot bag allocations back to open yard concrete surfaces to reduce biological respiration immediately.</p>
             </div>
-            <div class="bg-brand-cream p-4 rounded-2xl border border-slate-200/60 space-y-1">
-              <div class="flex items-center gap-2 font-bold text-slate-700 text-xs">
-                <span class="w-5 h-5 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-[10px] font-mono text-slate-600">2</span>
-                <span>ISOLATE STACK GEOMETRY</span>
-              </div>
-              <p class="text-xs text-brand-muted pl-7 leading-relaxed">Peak thermal profiles indicate anomalies are concentrated at depth 3 (${state.tempT3.toFixed(1)}°C). Isolate this pile sector block to safeguard surrounding clear zones.</p>
-            </div>
           `;
         }
-
         wrapper.innerHTML = listHtml;
       },
 
@@ -937,13 +910,11 @@
           `;
         });
 
-        body.innerHTML = tableHtml || `<tr><td colspan="6" class="py-8 text-center text-brand-muted font-medium">No telemetry logs archived in current session database.</td></tr>`;
+        body.innerHTML = tableHtml || `<tr><td colspan="6" class="py-8 text-center text-brand-muted font-medium">No telemetry logs archived in database instance.</td></tr>`;
       },
 
       appendChartTelemetryData: function(emc, t3) {
         if (!liveChartInstance) return;
-        
-        // Push raw parameters to history pipeline arrays
         if (state.chartHistoryEMC.length > 12) {
           state.chartHistoryEMC.shift();
           state.chartHistoryT3.shift();
@@ -951,16 +922,13 @@
         state.chartHistoryEMC.push(parseFloat(emc.toFixed(2)));
         state.chartHistoryT3.push(parseFloat(t3.toFixed(2)));
 
-        // Synchronize display datasets structures
         liveChartInstance.data.datasets[0].data = [...state.chartHistoryEMC];
         liveChartInstance.data.datasets[1].data = [...state.chartHistoryT3];
-        liveChartInstance.update('none'); // Quick redraw without canvas animation lags
+        liveChartInstance.update('none');
       },
 
       initializeChartJSPipeline: function() {
         const ctx = document.getElementById('canvasChartElement').getContext('2d');
-        
-        // Padding standard array points for index consistency
         const dynamicLabels = Array.from({length: state.chartHistoryEMC.length}, (_, i) => `Node t-${state.chartHistoryEMC.length - 1 - i}`);
 
         liveChartInstance = new Chart(ctx, {
@@ -992,9 +960,7 @@
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false }
-            },
+            plugins: { legend: { display: false } },
             scales: {
               x: { grid: { display: false }, ticks: { font: { size: 9 } } },
               yEMC: {
@@ -1018,42 +984,36 @@
     };
 
     // ============================================================================
-    // DASHBOARD TAB VIEW STATE MACHINE
+    // ROUTING TABS VIEW CONTROLLERS
     // ============================================================================
     const dashboardNav = {
       switchTab: function(tabId) {
         state.currentTab = tabId;
         
-        // Hide views
         document.getElementById('viewOverview').classList.add('hidden');
         document.getElementById('viewAdvisory').classList.add('hidden');
         document.getElementById('viewLogs').classList.add('hidden');
 
-        // Clear active buttons styling rules
         ['tabBtnOverview', 'tabBtnAdvisory', 'tabBtnLogs'].forEach(id => {
           document.getElementById(id).className = "px-4 py-2 text-xs font-semibold text-brand-muted hover:text-brand-dark transition-all";
         });
 
-        // Toggle visibility frameworks
         if (tabId === 'overview') {
           document.getElementById('viewOverview').classList.remove('hidden');
           document.getElementById('tabBtnOverview').className = "px-4 py-2 text-xs font-bold bg-white text-brand-dark rounded-lg shadow-sm border border-slate-200/40";
-          ui.updateOverview();
+          requestBackendEvaluation();
         } else if (tabId === 'advisory') {
           document.getElementById('viewAdvisory').classList.remove('hidden');
           document.getElementById('tabBtnAdvisory').className = "px-4 py-2 text-xs font-bold bg-white text-brand-dark rounded-lg shadow-sm border border-slate-200/40";
-          ui.updateAdvisoryPage();
+          if (state.lastCalculatedData) ui.updateAdvisoryPage(state.lastCalculatedData);
         } else if (tabId === 'logs') {
           document.getElementById('viewLogs').classList.remove('hidden');
           document.getElementById('tabBtnLogs').className = "px-4 py-2 text-xs font-bold bg-white text-brand-dark rounded-lg shadow-sm border border-slate-200/40";
-          ui.updateAuditDatabasePage();
+          loadHistoryLogsFromSupabase();
         }
       }
     };
 
-    // ============================================================================
-    // CONTROLLERS & DATA STREAM EVENT HOOKS
-    // ============================================================================
     function syncHardwareInterfaceMode() {
       const mode = state.isStorageMode;
       const btnDry = document.getElementById('simBtnDrying');
@@ -1072,94 +1032,51 @@
         wrapStore.classList.add('hidden');
         wrapDry.classList.remove('hidden');
       }
-
-      updateBroadcasterDebugPanel();
+      requestBackendEvaluation();
     }
 
-    function updateBroadcasterDebugPanel() {
-      const metrics = computeHealthMetrics();
+    function updateBroadcasterDebugPanel(data) {
       const rawPhase = state.isStorageMode ? "STORAGE" : "DRYING";
-      const payloadString = `${rawPhase}, T1:${state.tempT1.toFixed(1)}°C, T2:${state.tempT2.toFixed(1)}°C, T3:${state.tempT3.toFixed(1)}°C, EMC:${metrics.currentEMC.toFixed(1)}%`;
-      
+      const payloadString = `${rawPhase}, T1:${state.tempT1.toFixed(1)}°C, T2:${state.tempT2.toFixed(1)}°C, T3:${state.tempT3.toFixed(1)}°C, EMC:${data ? data.emc.toFixed(1) : '--'}%`;
       document.getElementById('txtDebugPayload').innerText = payloadString;
     }
 
-    function commitStateToLogs() {
-      const metrics = computeHealthMetrics();
-      const crop = getActiveCrop();
+    function applyPresetValues(t1, t2, t3, rh) {
+      state.tempT1 = t1; state.tempT2 = t2; state.tempT3 = t3; state.interGranularHumidity = rh;
+      state.isStorageMode = true;
 
-      const newRecord = {
-        id: Date.now(),
-        date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-        crop: crop.name.split(' ')[0],
-        mode: state.isStorageMode ? "Storage" : "Drying",
-        score: metrics.score,
-        status: metrics.status,
-        emc: parseFloat(metrics.currentEMC.toFixed(1)),
-        tAvg: parseFloat(((state.tempT1 + state.tempT2 + state.tempT3) / 3).toFixed(1))
-      };
+      document.getElementById('inputT1').value = t1; document.getElementById('txtT1').innerText = t1 + "°C";
+      document.getElementById('inputT2').value = t2; document.getElementById('txtT2').innerText = t2 + "°C";
+      document.getElementById('inputT3').value = t3; document.getElementById('txtT3').innerText = t3 + "°C";
+      document.getElementById('inputRH').value = rh; document.getElementById('txtRH').innerText = rh + "%";
 
-      state.historyLog.unshift(newRecord);
-      localStorage.setItem("grainLogs_v2", JSON.stringify(state.historyLog));
-      
-      // Pivot focus view to audit page
-      dashboardNav.switchTab('logs');
-    }
-
-    function applyEnvironmentPreset(type) {
-      if (presetFungal) {
-        if (type === 'fungal') {
-          state.tempT1 = 28.0; state.tempT2 = 32.5; state.tempT3 = 45.0; state.interGranularHumidity = 78;
-          state.isStorageMode = true;
-
-          document.getElementById('inputT1').value = 28.0; document.getElementById('txtT1').innerText = "28.0°C";
-          document.getElementById('inputT2').value = 32.5; document.getElementById('txtT2').innerText = "32.5°C";
-          document.getElementById('inputT3').value = 45.0; document.getElementById('txtT3').innerText = "45.0°C";
-          document.getElementById('inputRH').value = 78; document.getElementById('txtRH').innerText = "78%";
-        } else if (type === 'ideal') {
-          state.tempT1 = 21.0; state.tempT2 = 21.5; state.tempT3 = 22.0; state.interGranularHumidity = 44;
-          state.isStorageMode = true;
-
-          document.getElementById('inputT1').value = 21.0; document.getElementById('txtT1').innerText = "21.0°C";
-          document.getElementById('inputT2').value = 21.5; document.getElementById('txtT2').innerText = "21.5°C";
-          document.getElementById('inputT3').value = 22.0; document.getElementById('txtT3').innerText = "22.0°C";
-          document.getElementById('inputRH').value = 44; document.getElementById('txtRH').innerText = "44%";
-        }
-        syncHardwareInterfaceMode();
-        ui.updateOverview();
-        if (state.currentTab === 'advisory') ui.updateAdvisoryPage();
-      }
+      syncHardwareInterfaceMode();
     }
 
     // ============================================================================
-    // DOM CONNECTIONS & ATTACHMENT HANDLERS
+    // EVENT LISTENERS DOM CONNECTIONS
     // ============================================================================
     document.getElementById('cropSelect').addEventListener('change', (e) => {
       state.selectedCropIndex = parseInt(e.target.value);
-      const crop = getActiveCrop();
-
-      // Synchronize side spec tables
-      document.getElementById('sidebarCropName').innerText = crop.name;
-      document.getElementById('sidebarSafeLimit').innerText = `EMC \u2264 ${crop.safeLimit}%`;
-      document.getElementById('sidebarConstants').innerText = `c1: ${crop.c1.toExponential(2)} | c3: ${crop.c3.toFixed(2)}`;
-
-      updateBroadcasterDebugPanel();
-      ui.updateOverview();
-      if (state.currentTab === 'advisory') ui.updateAdvisoryPage();
+      requestBackendEvaluation();
     });
 
     document.getElementById('simBtnDrying').addEventListener('click', () => {
       state.isStorageMode = false;
       syncHardwareInterfaceMode();
-      ui.updateOverview();
-      if (state.currentTab === 'advisory') ui.updateAdvisoryPage();
     });
 
     document.getElementById('simBtnStorage').addEventListener('click', () => {
       state.isStorageMode = true;
       syncHardwareInterfaceMode();
-      ui.updateOverview();
-      if (state.currentTab === 'advisory') ui.updateAdvisoryPage();
+    });
+
+    document.getElementById('btnPresetFungal').addEventListener('click', () => {
+      applyPresetValues(28.0, 32.5, 45.0, 78);
+    });
+
+    document.getElementById('btnPresetIdeal').addEventListener('click', () => {
+      applyPresetValues(21.0, 21.5, 22.0, 44);
     });
 
     function registerLiveSliderBinding(inputId, txtId, stateProperty, symbol = "°C") {
@@ -1168,10 +1085,7 @@
         const value = parseFloat(e.target.value);
         state[stateProperty] = value;
         document.getElementById(txtId).innerText = value + symbol;
-        
-        updateBroadcasterDebugPanel();
-        ui.updateOverview();
-        if (state.currentTab === 'advisory') ui.updateAdvisoryPage();
+        requestBackendEvaluation();
       });
     }
 
@@ -1182,43 +1096,11 @@
     registerLiveSliderBinding('inputAmbientTemp', 'txtAmbientTemp', 'ambientTemp', '°C');
     registerLiveSliderBinding('inputAmbientHumidity', 'txtAmbientHumidity', 'ambientHumidity', '%');
 
-    // Telemetry simulator toggle button hook
-    document.getElementById('btnConnect').addEventListener('click', (e) => {
-      state.bleConnected = !state.bleConnected;
-      const statusBox = document.getElementById('connectionStatus');
-
-      if (state.bleConnected) {
-        e.target.innerText = "DISCONNECT";
-        e.target.className = "px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-blue-950 border border-blue-900 hover:bg-blue-900 text-blue-300 transition";
-        statusBox.className = "flex items-center gap-2 bg-blue-950/40 border border-blue-900/60 text-blue-300 px-3.5 py-1.5 rounded-lg";
-        statusBox.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 animate-pulse"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.656 48.656 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7C4.547 9.547 4.5 10.768 4.5 12s.047 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.092-1.209.138-2.43.138-3.662Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9 9.75V12m0 0v2.25m0-2.25h6" /></svg>
-          <span class="font-bold tracking-wide uppercase text-[10px] hidden md:inline">SYSTEM SIM ONLINE</span>
-        `;
-      } else {
-        e.target.innerText = "CONNECT";
-        e.target.className = "px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 transition";
-        statusBox.className = "flex items-center gap-2 bg-slate-900 border border-slate-800 text-slate-500 px-3.5 py-1.5 rounded-lg";
-        statusBox.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.656 48.656 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7C4.547 9.547 4.5 10.768 4.5 12s.047 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.092-1.209.138-2.43.138-3.662Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9 9.75V12m0 0v2.25m0-2.25h6" /></svg>
-          <span class="font-bold tracking-wide uppercase text-[10px] hidden md:inline">SYSTEM SIM OFFLINE</span>
-        `;
-      }
-    });
-
-    // ============================================================================
-    // BOOTSTRAP INIT LOOPS
-    // ============================================================================
     window.onload = function() {
-      loadPersistedHistoryLogs();
       ui.initializeChartJSPipeline();
-      
-      // Trigger base interfaces configurations syncs
       dashboardNav.switchTab('overview');
       syncHardwareInterfaceMode();
     };
   </script>
 </body>
 </html>
-
-
