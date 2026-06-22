@@ -319,7 +319,7 @@
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
         <div class="text-left">
           <h2 id="txtPlatformTitle" class="text-xl font-extrabold text-brand-dark tracking-tight">GrainGuardian Control Platform</h2>
-          <p class="text-xs text-brand-muted">Dynamic evaluation panel for physical field metrics and persisted history databases.</p>
+          <p class="text-xs text-brand-muted">Dynamic evaluation panel for physical field metrics and numerical audit ledgers.</p>
         </div>
 
         <div class="flex items-center gap-1 bg-brand-cream p-1 border border-slate-200/60 rounded-xl">
@@ -342,7 +342,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div class="bg-white border border-slate-200/80 p-5 rounded-3xl text-left flex items-center justify-between">
             <div class="space-y-1">
-              <span class="text-[10px] uppercase font-bold text-brand-muted">Dynamic Integrity Score</span>
+              <span class="text-[10px] uppercase font-bold text-brand-muted">Grain Health Index</span>
               <h3 id="kpiScore" class="text-3xl font-black text-brand-dark font-mono">--/100</h3>
             </div>
             <span id="kpiScoreIcon" class="p-3 bg-emerald-50 text-brand-success border border-emerald-100 rounded-2xl"><i class="fa-solid fa-square-poll-vertical text-lg"></i></span>
@@ -350,26 +350,26 @@
 
           <div class="bg-white border border-slate-200/80 p-5 rounded-3xl text-left flex items-center justify-between">
             <div class="space-y-1">
-              <span class="text-[10px] uppercase font-bold text-brand-muted">Calculated Moisture (EMC)</span>
-              <h3 id="kpiEmc" class="text-3xl font-black text-brand-dark font-mono">--%</h3>
+              <span class="text-[10px] uppercase font-bold text-brand-muted">Biological Activity (BAI)</span>
+              <h3 id="kpiBai" class="text-3xl font-black text-brand-dark font-mono">--</h3>
             </div>
-            <span id="kpiEmcIcon" class="p-3 bg-blue-50 text-brand-blue border border-blue-100 rounded-2xl"><i class="fa-solid fa-droplet text-lg"></i></span>
+            <span class="p-3 bg-blue-50 text-brand-blue border border-blue-100 rounded-2xl"><i class="fa-solid fa-chart-line text-lg"></i></span>
           </div>
 
           <div class="bg-white border border-slate-200/80 p-5 rounded-3xl text-left flex items-center justify-between">
             <div class="space-y-1">
-              <span class="text-[10px] uppercase font-bold text-brand-muted">Core Temperature (T3)</span>
-              <h3 id="kpiT3" class="text-3xl font-black text-brand-dark font-mono">--°C</h3>
+              <span class="text-[10px] uppercase font-bold text-brand-muted">Projected Revenue Loss</span>
+              <h3 id="kpiLoss" class="text-2xl font-black text-brand-danger font-mono">₹--</h3>
             </div>
-            <span id="kpiT3Icon" class="p-3 bg-amber-50 text-brand-warning border border-amber-100 rounded-2xl"><i class="fa-solid fa-temperature-three-quarters text-lg"></i></span>
+            <span class="p-3 bg-amber-50 text-brand-warning border border-amber-100 rounded-2xl"><i class="fa-solid fa-indian-rupee-sign text-lg"></i></span>
           </div>
 
           <div class="bg-white border border-slate-200/80 p-5 rounded-3xl text-left flex items-center justify-between">
             <div class="space-y-1">
-              <span class="text-[10px] uppercase font-bold text-brand-muted">Operational Phase</span>
-              <h3 id="kpiPhase" class="text-xl font-black text-brand-dark tracking-tight uppercase pt-1">Active Storage</h3>
+              <span class="text-[10px] uppercase font-bold text-brand-muted">Mass Shrinkage Deficit</span>
+              <h3 id="kpiWeightLoss" class="text-2xl font-black text-brand-dark font-mono">-- kg</h3>
             </div>
-            <span class="p-3 bg-slate-100 text-brand-dark border border-slate-200 rounded-2xl"><i class="fa-solid fa-layer-group text-lg"></i></span>
+            <span class="p-3 bg-slate-100 text-brand-dark border border-slate-200 rounded-2xl"><i class="fa-solid fa-weight-hanging text-lg"></i></span>
           </div>
         </div>
 
@@ -621,11 +621,11 @@
     // APPLICATION DATA STATE ENGINE & MASTER ENDPOINT CONNECTIONS
     // ============================================================================
     const SUPABASE_URL = "https://mcfwsuqaxddhywgkljyn.supabase.co"; 
-    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_PUBLIC_KEY"; // Substitute your public Anon Token configuration string here
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_PUBLIC_KEY"; // Place your live Supabase public anon token key configuration here
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Swap your custom domain / Render URL string directly here in production
-    const BACKEND_API_URL = "https://grain-guardian-v1.onrender.com";
+    const BACKEND_API_URL = "https://grain-guardian-v1.onrender.com"; 
+
     const CROP_DATABASE = [
       { id: 0, name: "Paddy (Rice)", safeLimit: 13.5 },
       { id: 1, name: "Wheat", safeLimit: 13.0 },
@@ -661,53 +661,46 @@
     // ASYNCHRONOUS DATA PIPELINE ENDPOINTS INTERFACES
     // ============================================================================
     async function requestBackendEvaluation() {
-  // 1. Compile payload structure precisely as expected by the new schema definitions
-  const payload = {
-    crop_id: parseInt(state.selectedCropIndex),
-    temp_t1: parseFloat(state.tempT1),
-    temp_t2: parseFloat(state.tempT2),
-    temp_t3: parseFloat(state.tempT3),
-    rh: state.isStorageMode ? parseFloat(state.interGranularHumidity) : parseFloat(state.ambientHumidity),
-    is_storage: state.isStorageMode
-  };
+      // Compile payload parameters to precisely match your Python AnalysisRequest schema definitions
+      const payload = {
+        crop_id: parseInt(state.selectedCropIndex),
+        temp_t1: parseFloat(state.tempT1),
+        temp_t2: parseFloat(state.tempT2),
+        temp_t3: parseFloat(state.tempT3),
+        rh: state.isStorageMode ? parseFloat(state.interGranularHumidity) : parseFloat(state.ambientHumidity),
+        is_storage: state.isStorageMode
+      };
 
-  try {
-    const response = await fetch(`${BACKEND_API_URL}/api/v3/analyze`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    
-    if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
-    const data = await response.json();
-    
-    // 2. Maps calculated metrics securely into global state arrays for Supabase tracking
-    state.lastCalculatedData = {
-      score: data.grain_health_index,
-      emc: data.biological_activity_index, // Tracks biological index curve values
-      thermal_average: data.thermal_average,
-      status: data.fungal_risk_status, 
-      reasons: data.action_advisory.join(' | ')
-    };
-    
-    // 3. Update Presentation Nodes
-    document.getElementById('kpiScore').innerText = `${data.grain_health_index}/100`;
-    document.getElementById('kpiEmc').innerText = `${payload.rh}%`; 
-    document.getElementById('kpiT3').innerText = `${state.tempT3.toFixed(1)}°C`;
-    
-    const alarmOverlay = document.getElementById('viewOverviewAlarmOverlay');
-    if (data.grain_health_index < 60) {
-      alarmOverlay.classList.remove('hidden');
-      document.getElementById('txtOverviewAlarmReasons').innerText = data.action_advisory.join(' | ');
-    } else {
-      alarmOverlay.classList.add('hidden');
+      try {
+        // Dispatching structural parameters directly out to the live api/v3/analyze endpoint
+        const response = await fetch(`${BACKEND_API_URL}/api/v3/analyze`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
+        const data = await response.json();
+        
+        // Maps calculated metrics response objects back into global configuration parameters
+        state.lastCalculatedData = {
+          score: data.grain_health_index,
+          emc: data.biological_activity_index, 
+          thermal_average: data.thermal_average,
+          status: data.fungal_risk_status, 
+          reasons: data.action_advisory.join(' | '),
+          processing_time: data.processing_time_ms,
+          confidence: data.prediction_confidence
+        };
+        
+        // Bind calculated properties dynamically straight onto your presentation metric text blocks
+        ui.updateOverviewMetrics(data, payload.rh);
+        if (state.currentTab === 'advisory') ui.updateAdvisoryPage(data);
+      } catch (err) {
+        console.error("Computational synchronization link failure:", err);
+      }
     }
-    
-    ui.appendChartTelemetryData(payload.rh, state.tempT3);
-  } catch (err) {
-    console.error("Computational synchronization link failure:", err);
-  }
-}
+
     async function commitStateToLogs() {
       if (!state.lastCalculatedData) {
         alert("No active analytics data found to capture. Please adjust variables.");
@@ -726,7 +719,7 @@
       };
 
       const { error } = await _supabase
-        .from('telemetry_logs') // Match your pre-designed table title exactly
+        .from('telemetry_logs') // Match your designed Supabase schema database table name exactly
         .insert([rowEntry]);
 
       if (error) {
@@ -798,11 +791,11 @@
     // DYNAMIC INTERFACE PRESENTATION SYSTEM
     // ============================================================================
     const ui = {
-      updateOverviewMetrics: function(data, currentMoistureInput) {
+      updateOverviewMetrics: function(data, currentHumidityMetricInput) {
         document.getElementById('kpiScore').innerText = `${data.grain_health_index}/100`;
-        document.getElementById('kpiEmc').innerText = `${currentMoistureInput}%`;
-        document.getElementById('kpiT3').innerText = `${state.tempT3.toFixed(1)}°C`;
-        document.getElementById('kpiPhase').innerText = state.isStorageMode ? "Active Storage" : "Drying Canopy";
+        document.getElementById('kpiBai').innerText = `${data.biological_activity_index}`;
+        document.getElementById('kpiLoss').innerText = `₹${data.estimated_financial_loss_inr}`;
+        document.getElementById('kpiWeightLoss').innerText = `${data.projected_weight_loss_kg} kg`;
 
         const alarmOverlay = document.getElementById('viewOverviewAlarmOverlay');
 
@@ -835,14 +828,14 @@
         document.getElementById('labelT2').innerText = `${state.tempT2.toFixed(1)}°C`;
         document.getElementById('labelT3').innerText = `${state.tempT3.toFixed(1)}°C`;
 
-        this.appendChartTelemetryData(currentMoistureInput, state.tempT3);
+        this.appendChartTelemetryData(currentHumidityMetricInput, state.tempT3);
         updateBroadcasterDebugPanel(data);
       },
 
       updateAdvisoryPage: function(data) {
         let moldProgress = 15, moldText = 'INHIBITED', moldColor = 'text-brand-success', moldBar = 'bg-brand-success';
         if (data.fungal_risk_status === 'HIGH') { moldText = 'CRITICAL PROLIFERATION'; moldColor = 'text-brand-danger font-bold animate-pulse'; moldBar = 'bg-brand-danger'; moldProgress = 90;}
-        else if (data.fungal_risk_status === 'MEDIUM') { moldText = 'ELEVATED RISK SPECTRUM'; moldColor = 'text-brand-warning'; moldBar = 'bg-brand-warning'; moldProgress = 55;}
+        else if (data.fungal_risk_status === 'MEDIUM') { moldText = 'ELEVATED SPECTRUM THREAT'; moldColor = 'text-brand-warning'; moldBar = 'bg-brand-warning'; moldProgress = 55;}
 
         document.getElementById('idxMold').innerText = `RISK: ${data.fungal_risk_status} (BAI: ${data.biological_activity_index})`;
         document.getElementById('idxMold').className = `font-bold font-mono text-[11px] ${moldColor}`;
@@ -850,8 +843,8 @@
         document.getElementById('barMold').style.width = `${moldProgress}%`;
 
         let aflatoxinProgress = 5, aflaText = 'SAFE MATRIX', aflaColor = 'text-brand-success', aflaBar = 'bg-brand-success';
-        if (data.fungal_risk_status === 'HIGH') { aflaText = 'SEVERE POTENTIAL BREACH'; aflaColor = 'text-brand-danger animate-pulse'; aflaBar = 'bg-brand-danger'; aflatoxinProgress = 92; }
-        else if (data.fungal_risk_status === 'MEDIUM') { aflaText = 'MONITOR ACTIVE CONTAMINANTS'; aflaColor = 'text-brand-warning'; aflaBar = 'bg-brand-warning'; aflatoxinProgress = 48; }
+        if (data.fungal_risk_status === 'HIGH') { aflaText = 'SEVERE AFLATOXIN RISK'; aflaColor = 'text-brand-danger animate-pulse'; aflaBar = 'bg-brand-danger'; aflatoxinProgress = 92; }
+        else if (data.fungal_risk_status === 'MEDIUM') { aflaText = 'MONITOR CONTAMINANTS'; aflaColor = 'text-brand-warning'; aflaBar = 'bg-brand-warning'; aflatoxinProgress = 48; }
 
         document.getElementById('idxAflatoxin').innerText = aflaText;
         document.getElementById('idxAflatoxin').className = `font-bold font-mono text-[11px] ${aflaColor}`;
@@ -860,8 +853,8 @@
 
         const peakTemp = Math.max(state.tempT1, state.tempT2, state.tempT3);
         let insectProgress = 20, insText = 'NOMINAL', insColor = 'text-brand-success', insBar = 'bg-brand-success';
-        if (peakTemp > 38.0) { insText = 'EXPONENTIAL METABOLISM'; insColor = 'text-brand-danger'; insBar = 'bg-brand-danger'; insectProgress = 90; }
-        else if (peakTemp > 31.0) { insText = 'RESPIRATION ACCELERATING'; insColor = 'text-brand-warning'; insBar = 'bg-brand-warning'; insectProgress = 60; }
+        if (peakTemp > 38.0) { insText = 'EXPONENTIAL RESPIRATION'; insColor = 'text-brand-danger'; insBar = 'bg-brand-danger'; insectProgress = 90; }
+        else if (peakTemp > 31.0) { insText = 'METABOLISM ACCELERATING'; insColor = 'text-brand-warning'; insBar = 'bg-brand-warning'; insectProgress = 60; }
 
         document.getElementById('idxInsect').innerText = insText;
         document.getElementById('idxInsect').className = `font-bold font-mono text-[11px] ${insColor}`;
@@ -1041,7 +1034,11 @@
 
     function updateBroadcasterDebugPanel(data) {
       const rawPhase = state.isStorageMode ? "STORAGE" : "DRYING";
-      const payloadString = `${rawPhase}, T1:${state.tempT1.toFixed(1)}°C, T2:${state.tempT2.toFixed(1)}°C, T3:${state.tempT3.toFixed(1)}°C, BAI:${data ? data.biological_activity_index : '--'}`;
+      // Injecting real-time explainable AI features directly onto the telemetry status broadcaster
+      const msTime = state.lastCalculatedData ? state.lastCalculatedData.processing_time : 0;
+      const confScore = state.lastCalculatedData ? state.lastCalculatedData.confidence : 0;
+      
+      const payloadString = `${rawPhase} | Latency: ${msTime}ms | Confidence: ${confScore}% | GHI: ${data ? data.grain_health_index : '--'}/100`;
       document.getElementById('txtDebugPayload').innerText = payloadString;
     }
 
